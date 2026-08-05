@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Monitoring Penggera Kebakaran</title>
+
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
+
+    <!-- ===== CHART.JS (VERSION 3 - PALING STABLE) ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js">
+    </script>
+
+    <!-- ===== CHART.JS ANNOTATION PLUGIN (VERSION 1 - PALING STABLE) ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0/dist/chartjs-plugin-annotation.min.js">
+    </script>
+
+    <!-- ===== FONT AWESOME ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- ===== CUSTOM CSS ===== -->
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+    <!-- ===== HEADER / TITLE ===== -->
+    <header class="header">
+        <div class="header-content">
+            <i class="fas fa-fire-extinguisher header-icon"></i>
+            <h1>SISTEM MONITORING PENGGERA KEBAKARAN</h1>
+            <div class="status-badge" id="systemStatus">
+                <span class="status-dot"></span>
+                <span id="statusText">Menunggu Data...</span>
+            </div>
+        </div>
+        <div class="header-sub">
+            <span id="lastUpdate">Last Update: --</span>
+        </div>
+    </header>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="container">
+
+        <!-- ===== 3 SENSOR CARDS ===== -->
+        <section class="sensor-grid">
+
+            <div class="sensor-card card-temp">
+                <div class="card-icon">
+                    <i class="fas fa-thermometer-half"></i>
+                </div>
+                <div class="card-body">
+                    <h3>Temperature</h3>
+                    <div class="card-value">
+                        <span id="tempValue">--</span>
+                        <span class="unit">°C</span>
+                    </div>
+                    <div class="card-status" id="tempStatus">--</div>
+                </div>
+            </div>
+
+            <div class="sensor-card card-humid">
+                <div class="card-icon">
+                    <i class="fas fa-droplet"></i>
+                </div>
+                <div class="card-body">
+                    <h3>Humidity</h3>
+                    <div class="card-value">
+                        <span id="humidValue">--</span>
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="card-status" id="humidStatus">--</div>
+                </div>
+            </div>
+
+            <div class="sensor-card card-gas">
+                <div class="card-icon">
+                    <i class="fas fa-smog"></i>
+                </div>
+                <div class="card-body">
+                    <h3>Gas MQ2</h3>
+                    <div class="card-value">
+                        <span id="gasValue">--</span>
+                        <span class="unit">ADC</span>
+                    </div>
+                    <div class="card-status" id="gasStatus">--</div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ===== 3 REALTIME GRAPHS ===== -->
+        <section class="charts-section">
+            <h2><i class="fas fa-chart-line"></i> Realtime Data Graph</h2>
+            <p class="chart-sub">Update setiap 5 saat</p>
+
+            <div class="charts-grid">
+
+                <div class="chart-box">
+                    <h3>🌡️ Temperature</h3>
+                    <div class="chart-container">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-box">
+                    <h3>💧 Humidity</h3>
+                    <div class="chart-container">
+                        <canvas id="humidChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-box">
+                    <h3>💨 Gas MQ2</h3>
+                    <div class="chart-container">
+                        <canvas id="gasChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>© 2026 Sistem Monitoring Penggera Kebakaran IoT</p>
+        </footer>
+
+    </main>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/dashboard.js"></script>
+
+</body>
+</html>
