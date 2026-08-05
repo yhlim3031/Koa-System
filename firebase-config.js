@@ -120,8 +120,7 @@ function getHumidityStatus(value) {
         return { text: '--', class: '' };
     }
     
-    // Hanya warning jika >70% (seperti yang anda minta)
-    if (value > 70) {
+    if (value >= 70) {
         return { text: '⚠️ Warning', class: 'warning' };
     } else {
         return { text: '✅ Normal', class: 'normal' };

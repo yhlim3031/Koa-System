@@ -1,5 +1,5 @@
 // ============================================
-// DASHBOARD CONTROLLER - OPTIMIZED VERSION
+// DASHBOARD CONTROLLER - DENGAN LEGEND BOX
 // ============================================
 
 // Chart instances
@@ -17,7 +17,7 @@ let chartData = {
 };
 
 // ============================================
-// CREATE HORIZONTAL LINE PLUGIN (MANUAL)
+// CREATE HORIZONTAL LINE PLUGIN (TANPA LABEL)
 // ============================================
 
 const warningLinesPlugin = {
@@ -37,6 +37,7 @@ const warningLinesPlugin = {
             if (yPixel >= chartArea.top && yPixel <= chartArea.bottom) {
                 ctx.save();
                 
+                // Lukis line SAHAJA (tanpa label)
                 ctx.strokeStyle = line.color;
                 ctx.lineWidth = line.width || 2;
                 ctx.setLineDash(line.dash || [6, 4]);
@@ -44,26 +45,6 @@ const warningLinesPlugin = {
                 ctx.moveTo(chartArea.left, yPixel);
                 ctx.lineTo(chartArea.right, yPixel);
                 ctx.stroke();
-                
-                if (line.label) {
-                    ctx.setLineDash([]);
-                    
-                    const text = line.label;
-                    ctx.font = 'bold 10px Segoe UI, sans-serif';
-                    const metrics = ctx.measureText(text);
-                    const textWidth = metrics.width;
-                    const padding = 8;
-                    const labelX = chartArea.right - textWidth - padding - 10;
-                    const labelY = yPixel - 6;
-                    
-                    ctx.fillStyle = 'rgba(10, 14, 23, 0.85)';
-                    ctx.fillRect(labelX - 4, labelY - 14, textWidth + padding + 4, 22);
-                    
-                    ctx.fillStyle = line.color;
-                    ctx.textAlign = 'left';
-                    ctx.textBaseline = 'bottom';
-                    ctx.fillText(text, labelX, labelY + 2);
-                }
                 
                 ctx.restore();
             }
@@ -94,7 +75,7 @@ function initCharts() {
                 label: 'Temperature (°C)',
                 data: chartData.temp,
                 borderColor: '#9b59b6',
-                backgroundColor: 'rgba(255, 107, 107, 0.15)',
+                backgroundColor: 'rgba(155, 89, 182, 0.15)',
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
@@ -141,14 +122,12 @@ function initCharts() {
                 {
                     value: 37,
                     color: '#f39c12',
-                    dash: [6, 4],
-                    label: '⚠️ WARNING 37°C'
+                    dash: [6, 4]
                 },
                 {
                     value: 45,
                     color: '#e74c3c',
-                    dash: [6, 4],
-                    label: '🚨 DANGER 45°C'
+                    dash: [6, 4]
                 }
             ]
         }
@@ -166,12 +145,12 @@ function initCharts() {
             datasets: [{
                 label: 'Humidity (%)',
                 data: chartData.humid,
-                borderColor: '#00d2d3', 
-                backgroundColor: 'rgba(78, 205, 196, 0.15)',
+                borderColor: '#00d2d3',
+                backgroundColor: 'rgba(0, 210, 211, 0.15)',
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
-                pointBackgroundColor: '#4ecdc4',
+                pointBackgroundColor: '#00d2d3',
                 borderWidth: 2
             }]
         },
@@ -214,8 +193,7 @@ function initCharts() {
                 {
                     value: 70,
                     color: '#f39c12',
-                    dash: [6, 4],
-                    label: '⚠️ WARNING 70%'
+                    dash: [6, 4]
                 }
             ]
         }
@@ -233,8 +211,8 @@ function initCharts() {
             datasets: [{
                 label: 'Gas MQ2 (ADC)',
                 data: chartData.gas,
-                borderColor: '#00b894', 
-                backgroundColor: 'rgba(243, 156, 18, 0.15)',
+                borderColor: '#00b894',
+                backgroundColor: 'rgba(0, 184, 148, 0.15)',
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
@@ -281,20 +259,21 @@ function initCharts() {
                 {
                     value: 301,
                     color: '#f39c12',
-                    dash: [6, 4],
-                    label: '⚠️ WARNING 301'
+                    dash: [6, 4]
                 },
                 {
                     value: 701,
                     color: '#e74c3c',
-                    dash: [6, 4],
-                    label: '🚨 DANGER 701'
+                    dash: [6, 4]
                 }
             ]
         }
     });
 
-    console.log('✅ Charts initialized with NEW colors!');
+    console.log('✅ Charts initialized!');
+    console.log('   📊 Temperature: 🟣 Purple (#9b59b6)');
+    console.log('   📊 Humidity: 🔵 Cyan (#00d2d3)');
+    console.log('   📊 Gas MQ2: 🟢 Lime (#00b894)');
 }
 
 // ============================================
@@ -302,15 +281,15 @@ function initCharts() {
 // ============================================
 
 function updateCharts(temp, humid, gas, timestamp) {
-    let label = '--';
-    if (timestamp) {
-        const date = new Date(timestamp);
-        label = date.toLocaleTimeString('ms-MY', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-    }
+    // 24-HOUR FORMAT
+    const now = new Date();
+    let label = now.toLocaleTimeString('en-GB', {
+        timeZone: 'Asia/Kuala_Lumpur',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
 
     const tempNum = Number(temp) || 0;
     const humidNum = Number(humid) || 0;
@@ -344,6 +323,78 @@ function updateCharts(temp, humid, gas, timestamp) {
         gasChart.data.labels = chartData.labels;
         gasChart.data.datasets[0].data = chartData.gas;
         gasChart.update();
+    }
+
+    // ==========================================
+    // UPDATE LEGEND BOXES
+    // ==========================================
+    updateLegendBoxes(temp, humid, gas);
+}
+
+// ==========================================
+// UPDATE LEGEND BOXES (KOTAK DI BAWAH CHART)
+// ==========================================
+
+function updateLegendBoxes(temp, humid, gas) {
+    // Temperature Legend
+    const tempLegend = document.getElementById('tempLegend');
+    if (tempLegend) {
+        const tempVal = Number(temp) || 0;
+        let tempHtml = '';
+        
+        // Warning line (37°C)
+        if (tempVal >= 37 && tempVal <= 40) {
+            tempHtml += `<span class="legend-item active-warning">🟠 WARNING 37°C (⚠️ AKTIF)</span>`;
+        } else {
+            tempHtml += `<span class="legend-item">🟠 WARNING 37°C</span>`;
+        }
+        
+        // Danger line (45°C)
+        if (tempVal >= 45) {
+            tempHtml += `<span class="legend-item active-danger">🔴 DANGER 45°C (🚨 AKTIF)</span>`;
+        } else {
+            tempHtml += `<span class="legend-item">🔴 DANGER 45°C</span>`;
+        }
+        
+        tempLegend.innerHTML = tempHtml;
+    }
+
+    // Humidity Legend
+    const humidLegend = document.getElementById('humidLegend');
+    if (humidLegend) {
+        const humidVal = Number(humid) || 0;
+        let humidHtml = '';
+        
+        if (humidVal >= 70) {
+            humidHtml += `<span class="legend-item active-warning">🟠 WARNING 70% (⚠️ AKTIF)</span>`;
+        } else {
+            humidHtml += `<span class="legend-item">🟠 WARNING 70%</span>`;
+        }
+        
+        humidLegend.innerHTML = humidHtml;
+    }
+
+    // Gas Legend
+    const gasLegend = document.getElementById('gasLegend');
+    if (gasLegend) {
+        const gasVal = Number(gas) || 0;
+        let gasHtml = '';
+        
+        // Warning line (301)
+        if (gasVal >= 301 && gasVal <= 700) {
+            gasHtml += `<span class="legend-item active-warning">🟠 WARNING 301 (⚠️ AKTIF)</span>`;
+        } else {
+            gasHtml += `<span class="legend-item">🟠 WARNING 301</span>`;
+        }
+        
+        // Danger line (701)
+        if (gasVal > 700) {
+            gasHtml += `<span class="legend-item active-danger">🔴 DANGER 701 (🚨 AKTIF)</span>`;
+        } else {
+            gasHtml += `<span class="legend-item">🔴 DANGER 701</span>`;
+        }
+        
+        gasLegend.innerHTML = gasHtml;
     }
 }
 
@@ -398,25 +449,21 @@ function updateDashboard(data) {
         statusText.style.color = '#27ae60';
     }
 
-    // ==========================================
-    // IMPORTANT: GUNA TIMESTAMP DARI WEBSITE
-    // ==========================================
-    // ABAIKAN timestamp dari ESP32, GUNA masa sekarang
+    // 24-HOUR FORMAT
     const now = new Date();
     const timestamp = now.toISOString();
     
-    // Papar masa Malaysia
-    document.getElementById('lastUpdate').textContent = 'Last Update: ' + now.toLocaleString('ms-MY', {
+    document.getElementById('lastUpdate').textContent = 'Last Update: ' + now.toLocaleString('en-GB', {
         timeZone: 'Asia/Kuala_Lumpur',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        second: '2-digit',
+        hour12: false
     });
 
-    // Update charts dengan timestamp dari website
     updateCharts(temp, humid, gas, timestamp);
 }
 
@@ -427,7 +474,6 @@ function updateDashboard(data) {
 function listenToFirebase() {
     console.log('🔄 Listening to Firebase at: sensor_data/latest');
 
-    // Gunakan sensorRef dari firebase-config.js
     sensorRef.on('value', (snapshot) => {
         const data = snapshot.val();
         console.log('📥 Data received from Firebase:', data);
@@ -436,7 +482,6 @@ function listenToFirebase() {
             updateDashboard(data);
         } else {
             console.warn('⚠️ No data at sensor_data/latest');
-            console.log('📌 Try adding data at: sensor_data/latest in Firebase');
             
             document.getElementById('tempValue').textContent = '--';
             document.getElementById('humidValue').textContent = '--';
@@ -450,6 +495,11 @@ function listenToFirebase() {
             document.querySelector('.status-dot').className = 'status-dot';
             document.getElementById('statusText').textContent = 'Menunggu Data...';
             document.getElementById('statusText').style.color = '#8899aa';
+            
+            // Reset legend
+            document.getElementById('tempLegend').innerHTML = '<span class="legend-item">🟠 WARNING 37°C</span><span class="legend-item">🔴 DANGER 45°C</span>';
+            document.getElementById('humidLegend').innerHTML = '<span class="legend-item">🟠 WARNING 70%</span>';
+            document.getElementById('gasLegend').innerHTML = '<span class="legend-item">🟠 WARNING 301</span><span class="legend-item">🔴 DANGER 701</span>';
         }
     }, (error) => {
         console.error('❌ Firebase error:', error);
@@ -466,14 +516,14 @@ function init() {
     console.log('🚀 Starting Fire Monitoring System...');
     console.log('📋 Thresholds:');
     console.log('  Temperature: Normal <35°C | Warning 37-40°C | Danger ≥45°C');
-    console.log('  Humidity: Normal 30-70% | Warning <30% or >70%');
+    console.log('  Humidity: Normal <70% | Warning ≥70%');
     console.log('  Gas: Safe 0-300 | Warning 301-700 | Danger >700 ADC');
+    console.log('⏰ 24-hour format (HH:MM:SS)');
 
     initCharts();
     listenToFirebase();
 
     console.log('✅ System ready!');
-    console.log('📌 Make sure data exists at: sensor_data/latest');
 }
 
 document.addEventListener('DOMContentLoaded', init);

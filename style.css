@@ -354,3 +354,72 @@ body {
         font-size: 1.8rem;
     }
 }
+
+/* ============================================
+   LEGEND BOX (KOTAK DI BAWAH CHART)
+   ============================================ */
+.legend-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    padding: 8px 12px;
+    margin-top: 10px;
+    background: #0a0e17;
+    border-radius: 8px;
+    border: 1px solid #1a2a3a;
+    min-height: 32px;
+}
+
+.legend-item {
+    font-size: 11px;
+    font-weight: 500;
+    color: #8899aa;
+    padding: 2px 10px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s;
+}
+
+/* Active Warning - berkilau */
+.legend-item.active-warning {
+    color: #f39c12;
+    border-color: #f39c12;
+    background: rgba(243, 156, 18, 0.15);
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.2);
+    animation: pulse-legend-warning 1.5s infinite;
+}
+
+/* Active Danger - berkilau */
+.legend-item.active-danger {
+    color: #e74c3c;
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.15);
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.2);
+    animation: pulse-legend-danger 1s infinite;
+}
+
+/* Animasi untuk legend aktif */
+@keyframes pulse-legend-warning {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+@keyframes pulse-legend-danger {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Responsive legend */
+@media (max-width: 480px) {
+    .legend-box {
+        gap: 6px;
+        padding: 6px 8px;
+    }
+    
+    .legend-item {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+}
