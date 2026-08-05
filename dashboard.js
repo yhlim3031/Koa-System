@@ -93,7 +93,7 @@ function initCharts() {
             datasets: [{
                 label: 'Temperature (°C)',
                 data: chartData.temp,
-                borderColor: '#ff6b6b',
+                borderColor: '#9b59b6',
                 backgroundColor: 'rgba(255, 107, 107, 0.15)',
                 fill: true,
                 tension: 0.4,
@@ -166,7 +166,7 @@ function initCharts() {
             datasets: [{
                 label: 'Humidity (%)',
                 data: chartData.humid,
-                borderColor: '#4ecdc4',
+                borderColor: '#00d2d3', 
                 backgroundColor: 'rgba(78, 205, 196, 0.15)',
                 fill: true,
                 tension: 0.4,
@@ -233,7 +233,7 @@ function initCharts() {
             datasets: [{
                 label: 'Gas MQ2 (ADC)',
                 data: chartData.gas,
-                borderColor: '#f39c12',
+                borderColor: '#00b894', 
                 backgroundColor: 'rgba(243, 156, 18, 0.15)',
                 fill: true,
                 tension: 0.4,
@@ -295,9 +295,6 @@ function initCharts() {
     });
 
     console.log('✅ Charts initialized with NEW colors!');
-    console.log('   📊 Temperature: 🟣 Purple (#9b59b6)');
-    console.log('   📊 Humidity: 🔵 Cyan (#00d2d3)');
-    console.log('   📊 Gas MQ2: 🟢 Lime (#00b894)');
 }
 
 // ============================================
