@@ -98,7 +98,7 @@ function initCharts() {
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
-                pointBackgroundColor: '#ff6b6b',
+                pointBackgroundColor: '#9b59b6',
                 borderWidth: 2
             }]
         },
@@ -238,7 +238,7 @@ function initCharts() {
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
-                pointBackgroundColor: '#f39c12',
+                pointBackgroundColor: '#00b894',
                 borderWidth: 2
             }]
         },
