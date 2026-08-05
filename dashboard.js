@@ -57,7 +57,6 @@ const warningLinesPlugin = {
                     const labelY = yPixel - 6;
                     
                     ctx.fillStyle = 'rgba(10, 14, 23, 0.85)';
-                    // Fallback for browsers without roundRect
                     ctx.fillRect(labelX - 4, labelY - 14, textWidth + padding + 4, 22);
                     
                     ctx.fillStyle = line.color;
@@ -359,17 +358,23 @@ function updateCharts(temp, humid, gas, timestamp) {
 // ============================================
 
 function updateDashboard(data) {
+    console.log('📊 updateDashboard called with:', data);
+    
     if (!data) {
         console.warn('⚠️ No data received');
         return;
     }
 
-    console.log('📊 Updating dashboard:', data);
-
+    // Try both lowercase and uppercase field names
     const temp = data.temperature ?? data.Temperature ?? 0;
     const humid = data.humidity ?? data.Humidity ?? 0;
     const gas = data.gas ?? data.Gas ?? data.smoke ?? data.Smoke ?? 0;
 
+    console.log(`   Temperature: ${temp}°C`);
+    console.log(`   Humidity: ${humid}%`);
+    console.log(`   Gas: ${gas} ADC`);
+
+    // Update cards
     document.getElementById('tempValue').textContent = temp;
     const tempStatus = getTemperatureStatus(temp);
     document.getElementById('tempStatus').textContent = tempStatus.text;
@@ -385,6 +390,7 @@ function updateDashboard(data) {
     document.getElementById('gasStatus').textContent = gasStatus.text;
     document.getElementById('gasStatus').className = 'card-status ' + gasStatus.class;
 
+    // System status
     const systemStatus = getSystemStatus(temp, humid, gas);
     const statusDot = document.querySelector('.status-dot');
     const statusText = document.getElementById('statusText');
@@ -402,6 +408,7 @@ function updateDashboard(data) {
     const timestamp = data.timestamp || data.Timestamp || new Date().toISOString();
     document.getElementById('lastUpdate').textContent = 'Last Update: ' + formatTimestamp(timestamp);
 
+    // Update charts
     updateCharts(temp, humid, gas, timestamp);
 }
 
@@ -410,14 +417,19 @@ function updateDashboard(data) {
 // ============================================
 
 function listenToFirebase() {
-    console.log('🔄 Listening to Firebase...');
+    console.log('🔄 Listening to Firebase at: sensor_data/latest');
 
+    // Gunakan sensorRef dari firebase-config.js
     sensorRef.on('value', (snapshot) => {
         const data = snapshot.val();
+        console.log('📥 Data received from Firebase:', data);
+        
         if (data) {
             updateDashboard(data);
         } else {
-            console.warn('⚠️ No data in Firebase yet. Waiting for ESP32...');
+            console.warn('⚠️ No data at sensor_data/latest');
+            console.log('📌 Try adding data at: sensor_data/latest in Firebase');
+            
             document.getElementById('tempValue').textContent = '--';
             document.getElementById('humidValue').textContent = '--';
             document.getElementById('gasValue').textContent = '--';
@@ -444,7 +456,7 @@ function listenToFirebase() {
 
 function init() {
     console.log('🚀 Starting Fire Monitoring System...');
-    console.log('📋 Thresholds (UPDATED):');
+    console.log('📋 Thresholds:');
     console.log('  Temperature: Normal <35°C | Warning 37-40°C | Danger ≥45°C');
     console.log('  Humidity: Normal 30-70% | Warning <30% or >70%');
     console.log('  Gas: Safe 0-300 | Warning 301-700 | Danger >700 ADC');
@@ -452,7 +464,8 @@ function init() {
     initCharts();
     listenToFirebase();
 
-    console.log('✅ System ready! Waiting for data from ESP32...');
+    console.log('✅ System ready!');
+    console.log('📌 Make sure data exists at: sensor_data/latest');
 }
 
-document.addEventListener('DOMContentLoaded', init); 	
+document.addEventListener('DOMContentLoaded', init);

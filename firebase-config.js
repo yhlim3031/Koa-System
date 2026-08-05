@@ -14,6 +14,48 @@ const firebaseConfig = {
 };
 
 // ============================================
+// INITIALIZE FIREBASE
+// ============================================
+
+firebase.initializeApp(firebaseConfig);
+
+const database = firebase.database();
+
+// ============================================
+// DEBUG: CHECK DATABASE PATH
+// ============================================
+
+// TEST 1: Check entire sensor_data
+const sensorDataRef = database.ref('sensor_data');
+
+sensorDataRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    console.log('🔍 FULL sensor_data:', data);
+}, (error) => {
+    console.error('❌ Error reading sensor_data:', error);
+});
+
+// TEST 2: Check latest data
+const sensorRef = database.ref('sensor_data/latest');
+
+sensorRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    console.log('🔍 LATEST data:', data);
+    
+    if (data) {
+        console.log('✅ Data found!');
+        console.log('   Temperature:', data.temperature);
+        console.log('   Humidity:', data.humidity);
+        console.log('   Gas:', data.gas);
+        console.log('   Timestamp:', data.timestamp);
+    } else {
+        console.warn('⚠️ No data at sensor_data/latest');
+    }
+}, (error) => {
+    console.error('❌ Error reading latest:', error);
+});
+
+// ============================================
 // THRESHOLD VALUES
 // ============================================
 
@@ -34,15 +76,6 @@ const THRESHOLDS = {
         danger: { min: 701, max: Infinity }
     }
 };
-
-// ============================================
-// INITIALIZE FIREBASE
-// ============================================
-
-firebase.initializeApp(firebaseConfig);
-
-const database = firebase.database();
-const sensorRef = database.ref('sensor_data/latest');
 
 // ============================================
 // HELPER FUNCTIONS
