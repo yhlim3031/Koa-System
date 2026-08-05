@@ -1,0 +1,356 @@
+/* ============================================
+   RESET & BASE
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0a0e17;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.header {
+    background: linear-gradient(135deg, #141b2b, #1a2a3a);
+    border: 1px solid #1a2a3a;
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto 2rem auto;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.header-icon {
+    font-size: 2.5rem;
+    color: #ff6b6b;
+}
+
+.header-content h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ff6b6b, #ffa502);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    flex: 1;
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0a0e17;
+    padding: 0.5rem 1.2rem;
+    border-radius: 50px;
+    border: 1px solid #1a2a3a;
+    font-size: 0.9rem;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    background: #555;
+}
+
+.status-dot.normal {
+    background: #27ae60;
+    box-shadow: 0 0 10px #27ae60;
+}
+
+.status-dot.warning {
+    background: #f39c12;
+    box-shadow: 0 0 10px #f39c12;
+}
+
+.status-dot.danger {
+    background: #e74c3c;
+    box-shadow: 0 0 10px #e74c3c;
+    animation: pulse 1s infinite;
+}
+
+#statusText {
+    font-weight: 500;
+}
+
+.header-sub {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid #1a2a3a;
+    font-size: 0.85rem;
+    color: #8899aa;
+    text-align: right;
+}
+
+/* ============================================
+   CONTAINER
+   ============================================ */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ============================================
+   SENSOR GRID - 3 CARDS
+   ============================================ */
+.sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.sensor-card {
+    background: linear-gradient(135deg, #141b2b, #1a2a3a);
+    border: 1px solid #1a2a3a;
+    border-radius: 16px;
+    padding: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.sensor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Card Icons */
+.card-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.card-temp .card-icon {
+    background: rgba(255, 107, 107, 0.15);
+    color: #ff6b6b;
+}
+
+.card-humid .card-icon {
+    background: rgba(78, 205, 196, 0.15);
+    color: #4ecdc4;
+}
+
+.card-gas .card-icon {
+    background: rgba(243, 156, 18, 0.15);
+    color: #f39c12;
+}
+
+/* Card Body */
+.card-body {
+    flex: 1;
+}
+
+.card-body h3 {
+    font-size: 0.85rem;
+    color: #8899aa;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.3rem;
+}
+
+.card-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.card-value .unit {
+    font-size: 1rem;
+    color: #8899aa;
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+.card-status {
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+    font-weight: 500;
+}
+
+.card-status.normal {
+    color: #27ae60;
+}
+
+.card-status.warning {
+    color: #f39c12;
+}
+
+.card-status.danger {
+    color: #e74c3c;
+}
+
+/* ============================================
+   CHARTS SECTION
+   ============================================ */
+.charts-section {
+    background: linear-gradient(135deg, #141b2b, #1a2a3a);
+    border: 1px solid #1a2a3a;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.charts-section h2 {
+    font-size: 1.4rem;
+    color: #e0e0e0;
+    margin-bottom: 0.3rem;
+}
+
+.charts-section h2 i {
+    color: #4ecdc4;
+    margin-right: 10px;
+}
+
+.chart-sub {
+    color: #8899aa;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.chart-box {
+    background: #0a0e17;
+    border-radius: 12px;
+    padding: 1.2rem;
+    border: 1px solid #1a2a3a;
+}
+
+.chart-box h3 {
+    font-size: 0.9rem;
+    color: #8899aa;
+    font-weight: 400;
+    margin-bottom: 0.8rem;
+    text-align: center;
+}
+
+.chart-container {
+    position: relative;
+    height: 200px;
+    width: 100%;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.footer {
+    text-align: center;
+    padding: 1.5rem 0;
+    color: #556677;
+    font-size: 0.85rem;
+    border-top: 1px solid #1a2a3a;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .header {
+        padding: 1rem;
+    }
+
+    .header-content h1 {
+        font-size: 1.2rem;
+    }
+
+    .header-icon {
+        font-size: 1.8rem;
+    }
+
+    .sensor-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sensor-card {
+        padding: 1.2rem;
+    }
+
+    .card-value {
+        font-size: 2rem;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        height: 150px;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.8rem;
+    }
+
+    .header-sub {
+        text-align: center;
+    }
+
+    .sensor-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+
+    .card-value {
+        font-size: 1.8rem;
+    }
+}
