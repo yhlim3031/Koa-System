@@ -37,7 +37,6 @@ const warningLinesPlugin = {
             if (yPixel >= chartArea.top && yPixel <= chartArea.bottom) {
                 ctx.save();
                 
-                // Draw line
                 ctx.strokeStyle = line.color;
                 ctx.lineWidth = line.width || 2;
                 ctx.setLineDash(line.dash || [6, 4]);
@@ -46,7 +45,6 @@ const warningLinesPlugin = {
                 ctx.lineTo(chartArea.right, yPixel);
                 ctx.stroke();
                 
-                // Draw label with background
                 if (line.label) {
                     ctx.setLineDash([]);
                     
@@ -58,12 +56,10 @@ const warningLinesPlugin = {
                     const labelX = chartArea.right - textWidth - padding - 10;
                     const labelY = yPixel - 6;
                     
-                    // Background box
                     ctx.fillStyle = 'rgba(10, 14, 23, 0.85)';
-                    ctx.roundRect(labelX - 4, labelY - 14, textWidth + padding + 4, 22, 4);
-                    ctx.fill();
+                    // Fallback for browsers without roundRect
+                    ctx.fillRect(labelX - 4, labelY - 14, textWidth + padding + 4, 22);
                     
-                    // Text
                     ctx.fillStyle = line.color;
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'bottom';
@@ -88,7 +84,6 @@ function initCharts() {
 
     // ==========================================
     // 1. TEMPERATURE CHART | 0-50°C
-    // Warning: 37°C | Danger: 45°C (jarak lebih jelas)
     // ==========================================
     const tempCtx = document.getElementById('tempChart').getContext('2d');
     
@@ -162,7 +157,6 @@ function initCharts() {
 
     // ==========================================
     // 2. HUMIDITY CHART | 0-100%
-    // Warning: 30% & 70%
     // ==========================================
     const humidCtx = document.getElementById('humidChart').getContext('2d');
     
@@ -235,8 +229,7 @@ function initCharts() {
     });
 
     // ==========================================
-    // 3. GAS MQ2 CHART | 0-1000 (step 100)
-    // Warning: 301 | Danger: 701
+    // 3. GAS MQ2 CHART | 0-1000
     // ==========================================
     const gasCtx = document.getElementById('gasChart').getContext('2d');
     
@@ -280,11 +273,11 @@ function initCharts() {
                 },
                 y: {
                     beginAtZero: true,
-                    max: 1000,  // 0-1000
+                    max: 1000,
                     ticks: {
                         color: '#556677',
                         font: { size: 9 },
-                        stepSize: 100  // naik 100 setiap step
+                        stepSize: 100
                     },
                     grid: {
                         color: 'rgba(136, 153, 170, 0.08)'
@@ -309,9 +302,6 @@ function initCharts() {
     });
 
     console.log('✅ Charts initialized!');
-    console.log('   📊 Temperature: 0-50°C | Warning 37°C | Danger 45°C');
-    console.log('   📊 Humidity: 0-100% | Warning 30% & 70%');
-    console.log('   📊 Gas MQ2: 0-1000 | Warning 301 | Danger 701');
 }
 
 // ============================================
@@ -465,4 +455,4 @@ function init() {
     console.log('✅ System ready! Waiting for data from ESP32...');
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', init); 	

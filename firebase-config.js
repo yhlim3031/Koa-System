@@ -14,23 +14,20 @@ const firebaseConfig = {
 };
 
 // ============================================
-// THRESHOLD VALUES (DIOPTIMAKAN)
+// THRESHOLD VALUES
 // ============================================
 
 const THRESHOLDS = {
-    // Temperature (DHT11)
     temperature: {
         normal: { min: 0, max: 35 },
         warning: { min: 37, max: 40 },
-        danger: { min: 45, max: Infinity }  // DANGER 45°C (jarak dari 37°C)
+        danger: { min: 45, max: Infinity }
     },
-    // Humidity (DHT11)
     humidity: {
         normal: { min: 30, max: 70 },
         warning: { min: 0, max: 30 },
         warningHigh: { min: 70, max: Infinity }
     },
-    // Gas MQ2 (ADC value 0-4095)
     gas: {
         safe: { min: 0, max: 300 },
         warning: { min: 301, max: 700 },
@@ -64,16 +61,12 @@ function formatTimestamp(timestamp) {
     });
 }
 
-// ============================================
-// STATUS CHECK FUNCTIONS
-// ============================================
-
 function getTemperatureStatus(value) {
     if (value === undefined || value === null || isNaN(value)) {
         return { text: '--', class: '' };
     }
     
-    if (value >= 45) {  // DANGER 45°C
+    if (value >= 45) {
         return { text: '🚨 DANGER!', class: 'danger' };
     } else if (value >= 37 && value <= 40) {
         return { text: '⚠️ Warning', class: 'warning' };
