@@ -359,7 +359,6 @@ function updateDashboard(data) {
         return;
     }
 
-    // Try both lowercase and uppercase field names
     const temp = data.temperature ?? data.Temperature ?? 0;
     const humid = data.humidity ?? data.Humidity ?? 0;
     const gas = data.gas ?? data.Gas ?? data.smoke ?? data.Smoke ?? 0;
@@ -399,10 +398,25 @@ function updateDashboard(data) {
         statusText.style.color = '#27ae60';
     }
 
-    const timestamp = data.timestamp || data.Timestamp || new Date().toISOString();
-    document.getElementById('lastUpdate').textContent = 'Last Update: ' + formatTimestamp(timestamp);
+    // ==========================================
+    // IMPORTANT: GUNA TIMESTAMP DARI WEBSITE
+    // ==========================================
+    // ABAIKAN timestamp dari ESP32, GUNA masa sekarang
+    const now = new Date();
+    const timestamp = now.toISOString();
+    
+    // Papar masa Malaysia
+    document.getElementById('lastUpdate').textContent = 'Last Update: ' + now.toLocaleString('ms-MY', {
+        timeZone: 'Asia/Kuala_Lumpur',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
 
-    // Update charts
+    // Update charts dengan timestamp dari website
     updateCharts(temp, humid, gas, timestamp);
 }
 

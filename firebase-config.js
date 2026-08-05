@@ -81,12 +81,14 @@ const THRESHOLDS = {
 // HELPER FUNCTIONS
 // ============================================
 
-function formatTimestamp(timestamp) {
-    if (!timestamp) return '--';
-    const date = new Date(timestamp);
-    
-    // Force Malaysia time (GMT+8)
-    return date.toLocaleString('ms-MY', {
+// CARA BARU: Website buat timestamp sendiri
+function getCurrentTimestamp() {
+    return new Date().toISOString();
+}
+
+// Atau guna ini untuk format terus
+function getCurrentTimeMalaysia() {
+    return new Date().toLocaleString('ms-MY', {
         timeZone: 'Asia/Kuala_Lumpur',
         day: '2-digit',
         month: '2-digit',
