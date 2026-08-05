@@ -84,7 +84,10 @@ const THRESHOLDS = {
 function formatTimestamp(timestamp) {
     if (!timestamp) return '--';
     const date = new Date(timestamp);
+    
+    // Force Malaysia time (GMT+8)
     return date.toLocaleString('ms-MY', {
+        timeZone: 'Asia/Kuala_Lumpur',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -115,10 +118,11 @@ function getHumidityStatus(value) {
         return { text: '--', class: '' };
     }
     
-    if (value >= 30 && value <= 70) {
-        return { text: '✅ Normal', class: 'normal' };
-    } else {
+    // Hanya warning jika >70% (seperti yang anda minta)
+    if (value > 70) {
         return { text: '⚠️ Warning', class: 'warning' };
+    } else {
+        return { text: '✅ Normal', class: 'normal' };
     }
 }
 

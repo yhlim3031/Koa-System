@@ -212,12 +212,6 @@ function initCharts() {
             },
             customLines: [
                 {
-                    value: 30,
-                    color: '#f39c12',
-                    dash: [6, 4],
-                    label: '⚠️ WARNING 30%'
-                },
-                {
                     value: 70,
                     color: '#f39c12',
                     dash: [6, 4],
@@ -300,7 +294,10 @@ function initCharts() {
         }
     });
 
-    console.log('✅ Charts initialized!');
+    console.log('✅ Charts initialized with NEW colors!');
+    console.log('   📊 Temperature: 🟣 Purple (#9b59b6)');
+    console.log('   📊 Humidity: 🔵 Cyan (#00d2d3)');
+    console.log('   📊 Gas MQ2: 🟢 Lime (#00b894)');
 }
 
 // ============================================
