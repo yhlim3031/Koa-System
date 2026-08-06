@@ -217,9 +217,9 @@
 
     <!-- ===== JAVASCRIPT (FULL DASHBOARD LOGIC) ===== -->
     <script>
-        // ★ INIT FIREBASE DI SINI (GUNAKAN CONFIG DARI FAIL LUAR) ★
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        // ★ NOTA PENTING: 
+        // database, sensorRef, dan historyRef telah diinitialise oleh firebase-config.js
+        // Kita gunakan pembolehubah global tersebut terus. JANGAN init semula di sini!
 
         // ============================================
         // 1. CHART SETUP
@@ -404,7 +404,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             btn.disabled = true;
             
-            // ★ FUNGSI GET DATA 30 MINIT TERAKHIR ★
+            // ★ FUNGSI GET DATA 30 MINIT TERAKHIR (Guna historyRef global) ★
             getAllHistoryData((data) => {
                 if (!data || data.length === 0) {
                     alert('⚠️ Tiada data 30 minit terakhir untuk di export.');
@@ -507,7 +507,7 @@
         }
 
         // ============================================
-        // ★ HELPER: STYLE UNTUK EXCEL (Guna untuk semua sheet) ★
+        // ★ HELPER: STYLE UNTUK EXCEL ★
         // ============================================
         function styleWorksheet(ws, lastRow) {
             for (let R = 0; R <= lastRow; R++) {
@@ -550,10 +550,10 @@
         }
 
         // ============================================
-        // 5. ★ AMBIL DATA 30 MINIT TERAKHIR SAHAJA ★
+        // 5. ★ AMBIL DATA 30 MINIT TERAKHIR SAHAJA (Guna historyRef global) ★
         // ============================================
         function getAllHistoryData(callback) {
-            const historyRef = database.ref('sensor_data/history');
+            // historyRef telah diisytihar dalam firebase-config.js
             historyRef.once('value').then((snapshot) => {
                 const val = snapshot.val();
                 if (!val) { callback([]); return; }
@@ -592,14 +592,14 @@
         }
 
         // ============================================
-        // 6. ★ AMBIL DATA TERKINI DARI 'latest' ★
+        // 6. ★ AMBIL DATA TERKINI DARI 'latest' (Guna sensorRef global) ★
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
             console.log("🔄 Menunggu data terkini dari Firebase (node 'latest')...");
             
-            const latestRef = database.ref('sensor_data/latest');
-            latestRef.on('value', (snapshot) => {
+            // sensorRef telah diisytihar dalam firebase-config.js
+            sensorRef.on('value', (snapshot) => {
                 const latestData = snapshot.val();
                 if (latestData) {
                     console.log("📥 Data 'latest' diterima:", latestData);
