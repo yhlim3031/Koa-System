@@ -359,23 +359,39 @@
             document.getElementById('statusDot').className = 'status-dot ' + sysClass;
             document.getElementById('statusText').textContent = sysText;
 
-            // ★ Update Legend - LOGIK BARU YANG PALING RINGKAS DAN TEPAT ★
+            // ★ Update Legend - MENGGUNAKAN LOGIK DARI GETTEMPERATURESTATUS ★
             const tempL = document.getElementById('tempLegend');
-            // Jika 37-44 -> Warning. Jika >=45 -> Danger. Lain -> Normal.
-            tempL.innerHTML = (temp >= 37 && temp < 45 ? `<span class="legend-item active-warning">🟠 WARNING 37°C (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 37°C</span>`) +
-                              (temp >= 45 ? `<span class="legend-item active-danger">🔴 DANGER 45°C (🚨 AKTIF)</span>` : `<span class="legend-item">🔴 DANGER 45°C</span>`);
+            
+            // Guna logik yang sama seperti getTemperatureStatus() untuk konsisten
+            if (tStat.class === 'warning') {
+                tempL.innerHTML = `<span class="legend-item active-warning">🟠 WARNING 37°C (⚠️ AKTIF)</span><span class="legend-item">🔴 DANGER 45°C</span>`;
+            } else if (tStat.class === 'danger') {
+                tempL.innerHTML = `<span class="legend-item">🟠 WARNING 37°C</span><span class="legend-item active-danger">🔴 DANGER 45°C (🚨 AKTIF)</span>`;
+            } else {
+                tempL.innerHTML = `<span class="legend-item">🟠 WARNING 37°C</span><span class="legend-item">🔴 DANGER 45°C</span>`;
+            }
 
+            // Humidity Legend (Logik Standard)
             const humidL = document.getElementById('humidLegend');
-            humidL.innerHTML = humid >= 70 ? `<span class="legend-item active-warning">🟠 WARNING 70% (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 70%</span>`;
+            if (hStat.class === 'warning') {
+                humidL.innerHTML = `<span class="legend-item active-warning">🟠 WARNING 70% (⚠️ AKTIF)</span>`;
+            } else {
+                humidL.innerHTML = `<span class="legend-item">🟠 WARNING 70%</span>`;
+            }
 
+            // Gas Legend (Logik Standard)
             const gasL = document.getElementById('gasLegend');
-            gasL.innerHTML = (gas >= 301 && gas <= 700 ? `<span class="legend-item active-warning">🟠 WARNING 301 (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 301</span>`) +
-                             (gas > 700 ? `<span class="legend-item active-danger">🔴 DANGER 701 (🚨 AKTIF)</span>` : `<span class="legend-item">🔴 DANGER 701</span>`);
+            if (gStat.class === 'warning') {
+                gasL.innerHTML = `<span class="legend-item active-warning">🟠 WARNING 301 (⚠️ AKTIF)</span><span class="legend-item">🔴 DANGER 701</span>`;
+            } else if (gStat.class === 'danger') {
+                gasL.innerHTML = `<span class="legend-item">🟠 WARNING 301</span><span class="legend-item active-danger">🔴 DANGER 701 (🚨 AKTIF)</span>`;
+            } else {
+                gasL.innerHTML = `<span class="legend-item">🟠 WARNING 301</span><span class="legend-item">🔴 DANGER 701</span>`;
+            }
 
             document.getElementById('lastUpdate').textContent = 'Last Update: ' + new Date().toLocaleString('ms-MY', { hour12: false });
             updateCharts(temp, humid, gas);
         }
-
         // ============================================
         // 4. ★ EXPORT EXCEL (ALIGN LEFT, BORDER, WARNA SELURUH BARIS) ★
         // ============================================
