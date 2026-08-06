@@ -5,30 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Monitoring Penggera Kebakaran</title>
     
-    <!-- 1. Chart.js -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- 2. FontAwesome -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- 3. XLSX -->
+    <!-- XLSX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- ★ 4. FIREBASE SDK ★ -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-    <!-- ★ 5. IMPORT CONFIG DARI FAIL LUAR ★ -->
+    <!-- Import config -->
     <script src="firebase-config.js"></script>
 
     <style>
-        /* ==============================
-           CSS (DASHBOARD & BUTTON)
-           ============================== */
+        /* ===== CSS SAMA SEPERTI SEBELUMNYA ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0a0e17; color: #e0e0e0; min-height: 100vh; padding: 20px;
         }
-
         .header {
             background: linear-gradient(135deg, #141b2b, #1a2a3a);
             border: 1px solid #1a2a3a; border-radius: 16px;
@@ -42,11 +39,9 @@
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; flex: 1;
         }
         .header-actions { display: flex; align-items: center; gap: 1rem; }
-        
-        /* BUTANG EXPORT */
         .btn-export {
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            width: auto !important; padding: 0.6rem 1.2rem; 
+            padding: 0.6rem 1.2rem; 
             background: linear-gradient(135deg, #1a7a3a, #28a745); color: white;
             border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
             cursor: pointer; transition: all 0.3s;
@@ -66,10 +61,8 @@
         .status-dot.danger { background: #e74c3c; box-shadow: 0 0 10px #e74c3c; animation: pulse 1s infinite; }
 
         .header-sub { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #1a2a3a; font-size: 0.85rem; color: #8899aa; text-align: right; }
-
         .container { max-width: 1400px; margin: 0 auto; }
 
-        /* Sensor Grid */
         .sensor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .sensor-card {
             background: linear-gradient(135deg, #141b2b, #1a2a3a); border: 1px solid #1a2a3a;
@@ -93,7 +86,6 @@
         .card-status.warning { color: #f39c12; }
         .card-status.danger { color: #e74c3c; }
 
-        /* Charts */
         .charts-section { background: linear-gradient(135deg, #141b2b, #1a2a3a); border: 1px solid #1a2a3a; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
         .charts-section h2 { font-size: 1.4rem; color: #e0e0e0; margin-bottom: 0.3rem; }
         .charts-section h2 i { color: #4ecdc4; margin-right: 10px; }
@@ -103,7 +95,6 @@
         .chart-box h3 { font-size: 0.9rem; color: #8899aa; font-weight: 400; margin-bottom: 0.8rem; text-align: center; }
         .chart-container { position: relative; height: 200px; width: 100%; }
 
-        /* Legend Boxes */
         .legend-box {
             display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
             padding: 8px 12px; margin-top: 10px; background: #0a0e17;
@@ -188,8 +179,8 @@
                     <h3><i class="fas fa-thermometer-half" style="color:#ff6b6b;"></i> Temperature</h3>
                     <div class="chart-container"><canvas id="tempChart"></canvas></div>
                     <div class="legend-box" id="tempLegend">
-                        <span class="legend-item">🟠 WARNING 37°C</span>
-                        <span class="legend-item">🔴 DANGER 45°C</span>
+                        <span class="legend-item" id="tempWarnLabel">🟠 WARNING 37°C</span>
+                        <span class="legend-item" id="tempDangerLabel">🔴 DANGER 45°C</span>
                     </div>
                 </div>
                 <!-- Humidity -->
@@ -197,7 +188,7 @@
                     <h3><i class="fas fa-tint" style="color:#4ecdc4;"></i> Humidity</h3>
                     <div class="chart-container"><canvas id="humidChart"></canvas></div>
                     <div class="legend-box" id="humidLegend">
-                        <span class="legend-item">🟠 WARNING 70%</span>
+                        <span class="legend-item" id="humidWarnLabel">🟠 WARNING 70%</span>
                     </div>
                 </div>
                 <!-- Gas -->
@@ -205,8 +196,8 @@
                     <h3><i class="fas fa-fire" style="color:#f39c12;"></i> Gas MQ2</h3>
                     <div class="chart-container"><canvas id="gasChart"></canvas></div>
                     <div class="legend-box" id="gasLegend">
-                        <span class="legend-item">🟠 WARNING 301</span>
-                        <span class="legend-item">🔴 DANGER 701</span>
+                        <span class="legend-item" id="gasWarnLabel">🟠 WARNING 301</span>
+                        <span class="legend-item" id="gasDangerLabel">🔴 DANGER 701</span>
                     </div>
                 </div>
             </div>
@@ -215,14 +206,14 @@
 
     <footer class="footer">&copy; 2026 Sistem Monitoring Penggera Kebakaran.</footer>
 
-    <!-- ===== JAVASCRIPT (FULL DASHBOARD LOGIC) ===== -->
+    <!-- ===== JAVASCRIPT ===== -->
     <script>
-        // ★ NOTA PENTING: 
-        // database, sensorRef, dan historyRef telah diinitialise oleh firebase-config.js
-        // Kita gunakan pembolehubah global tersebut terus. JANGAN init semula di sini!
+        // Init Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
         // ============================================
-        // 1. CHART SETUP
+        // 1. CHART SETUP (SAMA)
         // ============================================
         let tempChart, humidChart, gasChart;
         const MAX_POINTS = 20;
@@ -284,11 +275,11 @@
         }
 
         // ============================================
-        // 2. STATUS FUNCTIONS
+        // 2. STATUS FUNCTIONS (DIPERBAIKI)
         // ============================================
         function getTemperatureStatus(temp) {
             if (temp >= 45) return { text: '🚨 DANGER', class: 'danger' };
-            if (temp >= 37) return { text: '⚠️ WARNING', class: 'warning' };
+            if (temp >= 37 && temp <= 44) return { text: '⚠️ WARNING', class: 'warning' };  // 37-44 WARNING
             return { text: '✅ Normal', class: 'normal' };
         }
         function getHumidityStatus(humid) {
@@ -301,14 +292,8 @@
             return { text: '✅ Normal', class: 'normal' };
         }
 
-        function determineStatus(temp, humid, gas) {
-            if (temp >= 45 || gas > 700) return 'DANGER';
-            if (temp >= 37 || humid >= 70 || gas >= 301) return 'WARNING';
-            return 'NORMAL';
-        }
-
         // ============================================
-        // 3. UPDATE DASHBOARD (AMBIL DARI LATEST)
+        // 3. UPDATE DASHBOARD (DENGAN DEBUG & LOGIK LEGEND YANG JELAS)
         // ============================================
         function updateDashboard(data) {
             if (!data) return;
@@ -316,8 +301,12 @@
             const humid = data.humidity || 0;
             const gas = data.gas || 0;
 
+            console.log(`🔍 DEBUG: temp=${temp}, humid=${humid}, gas=${gas}`);
+
+            // ---- Update cards ----
             document.getElementById('tempValue').textContent = temp;
             const tStat = getTemperatureStatus(temp);
+            console.log(`   tStat:`, tStat);
             const tEl = document.getElementById('tempStatus');
             tEl.textContent = tStat.text; tEl.className = 'card-status ' + tStat.class;
 
@@ -331,15 +320,15 @@
             const gEl = document.getElementById('gasStatus');
             gEl.textContent = gStat.text; gEl.className = 'card-status ' + gStat.class;
 
+            // ---- System status ----
             let sysClass = 'normal', sysText = '✅ Sistem Normal';
             if (tStat.class === 'danger' || gStat.class === 'danger') { sysClass = 'danger'; sysText = '🚨 DANGER!'; }
             else if (tStat.class === 'warning' || gStat.class === 'warning' || hStat.class === 'warning') { sysClass = 'warning'; sysText = '⚠️ WARNING'; }
-            
             document.getElementById('statusDot').className = 'status-dot ' + sysClass;
             document.getElementById('statusText').textContent = sysText;
 
             // ============================================
-            // ★ UPDATE LEGEND BOXES (DOM CHILDREN - TAHAN GAGAL) ★
+            // ★ UPDATE LEGEND BOXES (DENGAN LOGIK JELAS) ★
             // ============================================
             const resetStyle = (el) => {
                 if (!el) return;
@@ -366,37 +355,53 @@
                 el.style.animation = 'pulse 1s infinite';
             };
 
-            // TEMP
-            const tempLegend = document.getElementById('tempLegend');
-            if (tempLegend) {
-                resetStyle(tempLegend.children[0]);
-                resetStyle(tempLegend.children[1]);
-                if (tStat.class === 'danger') setDangerStyle(tempLegend.children[1]);
-                else if (tStat.class === 'warning') setWarningStyle(tempLegend.children[0]);
+            // 1. TEMPERATURE LEGEND
+            const tempWarn = document.getElementById('tempWarnLabel');
+            const tempDanger = document.getElementById('tempDangerLabel');
+            console.log(`   tempWarn element:`, tempWarn);
+            console.log(`   tempDanger element:`, tempDanger);
+
+            resetStyle(tempWarn);
+            resetStyle(tempDanger);
+
+            if (tStat.class === 'danger') {
+                console.log(`   🔴 Setting DANGER style for temp (≥45)`);
+                setDangerStyle(tempDanger);
+            } else if (tStat.class === 'warning') {
+                console.log(`   🟠 Setting WARNING style for temp (37-44)`);
+                setWarningStyle(tempWarn);
+            } else {
+                console.log(`   ⚪ Temp status NORMAL`);
             }
 
-            // HUMID
-            const humidLegend = document.getElementById('humidLegend');
-            if (humidLegend) {
-                resetStyle(humidLegend.children[0]);
-                if (hStat.class === 'warning') setWarningStyle(humidLegend.children[0]);
+            // 2. HUMIDITY LEGEND
+            const humidWarn = document.getElementById('humidWarnLabel');
+            resetStyle(humidWarn);
+            if (hStat.class === 'warning') {
+                console.log(`   💧 Setting WARNING style for humidity`);
+                setWarningStyle(humidWarn);
             }
 
-            // GAS
-            const gasLegend = document.getElementById('gasLegend');
-            if (gasLegend) {
-                resetStyle(gasLegend.children[0]);
-                resetStyle(gasLegend.children[1]);
-                if (gStat.class === 'danger') setDangerStyle(gasLegend.children[1]);
-                else if (gStat.class === 'warning') setWarningStyle(gasLegend.children[0]);
+            // 3. GAS LEGEND
+            const gasWarn = document.getElementById('gasWarnLabel');
+            const gasDanger = document.getElementById('gasDangerLabel');
+            resetStyle(gasWarn);
+            resetStyle(gasDanger);
+            if (gStat.class === 'danger') {
+                console.log(`   💨 Setting DANGER style for gas`);
+                setDangerStyle(gasDanger);
+            } else if (gStat.class === 'warning') {
+                console.log(`   💨 Setting WARNING style for gas`);
+                setWarningStyle(gasWarn);
             }
 
+            // ---- Last update ----
             document.getElementById('lastUpdate').textContent = 'Last Update: ' + new Date().toLocaleString('ms-MY', { hour12: false });
             updateCharts(temp, humid, gas);
         }
 
         // ============================================
-        // 4. ★ EXPORT EXCEL (3 CHART, 30 MINIT TERAKHIR) ★
+        // 4. EXPORT EXCEL (SAMA)
         // ============================================
         function exportToExcel() {
             const btn = document.querySelector('.btn-export');
@@ -404,173 +409,93 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             btn.disabled = true;
             
-            // ★ FUNGSI GET DATA 30 MINIT TERAKHIR (Guna historyRef global) ★
             getAllHistoryData((data) => {
                 if (!data || data.length === 0) {
-                    alert('⚠️ Tiada data 30 minit terakhir untuk di export.');
+                    alert('⚠️ Tiada data history untuk di export.');
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     return;
                 }
                 
                 const wb = XLSX.utils.book_new();
+                const excelData = [];
                 const now = new Date();
                 const dateStr = now.toLocaleDateString('ms-MY');
                 const timeStr = now.toLocaleTimeString('ms-MY', { hour12: false });
-
-                // ==========================================
-                // 1. SHEET TEMPERATURE
-                // ==========================================
-                const tempData = [];
-                tempData.push(['LAPORAN DATA SUHU (°C)']);
-                tempData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
-                tempData.push(['Bil', 'Masa', 'Suhu (°C)', 'Status']);
+                
+                excelData.push(['LAPORAN DATA SISTEM MONITORING PENGGERA KEBAKARAN']);
+                excelData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
+                excelData.push(['Bil', 'Masa', 'Suhu (°C)', 'Kelembapan (%)', 'Gas (ADC)', 'Status']);
                 
                 let bil = 1;
                 data.forEach(row => {
                     const temp = Number(row.temperature) || 0;
-                    const stat = getTemperatureStatus(temp);
-                    let statusText = stat.text.replace(/[^\w\s]/gi, '').trim();
-                    if(statusText === 'DANGER') statusText = 'DANGER';
-                    else if(statusText === 'WARNING') statusText = 'WARNING';
-                    else statusText = 'NORMAL';
-
-                    tempData.push([bil++, row.timestamp.split(' ')[1], temp.toFixed(1), statusText]);
-                });
-                
-                const wsTemp = XLSX.utils.aoa_to_sheet(tempData);
-                wsTemp['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 20 }];
-                wsTemp['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }];
-                styleWorksheet(wsTemp, tempData.length - 1);
-
-                // ==========================================
-                // 2. SHEET HUMIDITY
-                // ==========================================
-                const humidData = [];
-                humidData.push(['LAPORAN DATA KELEMBAPAN (%)']);
-                humidData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
-                humidData.push(['Bil', 'Masa', 'Kelembapan (%)', 'Status']);
-                
-                bil = 1;
-                data.forEach(row => {
                     const humid = Number(row.humidity) || 0;
-                    const stat = getHumidityStatus(humid);
-                    let statusText = stat.text.replace(/[^\w\s]/gi, '').trim();
-                    if(statusText === 'WARNING') statusText = 'WARNING';
-                    else statusText = 'NORMAL';
-
-                    humidData.push([bil++, row.timestamp.split(' ')[1], humid.toFixed(1), statusText]);
-                });
-                
-                const wsHumid = XLSX.utils.aoa_to_sheet(humidData);
-                wsHumid['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 18 }, { wch: 20 }];
-                wsHumid['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }];
-                styleWorksheet(wsHumid, humidData.length - 1);
-
-                // ==========================================
-                // 3. SHEET GAS
-                // ==========================================
-                const gasData = [];
-                gasData.push(['LAPORAN DATA GAS (ADC)']);
-                gasData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
-                gasData.push(['Bil', 'Masa', 'Gas (ADC)', 'Status']);
-                
-                bil = 1;
-                data.forEach(row => {
                     const gas = Number(row.gas) || 0;
-                    const stat = getGasStatus(gas);
-                    let statusText = stat.text.replace(/[^\w\s]/gi, '').trim();
-                    if(statusText === 'DANGER') statusText = 'DANGER';
-                    else if(statusText === 'WARNING') statusText = 'WARNING';
-                    else statusText = 'NORMAL';
+                    
+                    let statusText = 'NORMAL';
+                    if (temp >= 45 || gas > 700) statusText = 'DANGER';
+                    else if (temp >= 37 || humid >= 70 || gas >= 301) statusText = 'WARNING';
 
-                    gasData.push([bil++, row.timestamp.split(' ')[1], Math.round(gas), statusText]);
+                    excelData.push([
+                        bil++,
+                        row.timestamp.split(' ')[1],
+                        temp.toFixed(1),
+                        humid.toFixed(1),
+                        Math.round(gas),
+                        statusText
+                    ]);
                 });
                 
-                const wsGas = XLSX.utils.aoa_to_sheet(gasData);
-                wsGas['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 14 }, { wch: 20 }];
-                wsGas['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }];
-                styleWorksheet(wsGas, gasData.length - 1);
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                ws['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 14 }, { wch: 20 }];
+                ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }];
 
-                // ==========================================
-                // GABUNG & DOWNLOAD
-                // ==========================================
-                XLSX.utils.book_append_sheet(wb, wsTemp, 'Temperature');
-                XLSX.utils.book_append_sheet(wb, wsHumid, 'Humidity');
-                XLSX.utils.book_append_sheet(wb, wsGas, 'Gas');
+                const lastRow = excelData.length - 1; 
+                for (let R = 0; R <= lastRow; R++) {
+                    let rowBg = null, rowFont = null;
+                    if (R >= 3) {
+                        const statusAddr = XLSX.utils.encode_cell({ r: R, c: 5 });
+                        const statusCell = ws[statusAddr];
+                        if (statusCell && statusCell.v) {
+                            const sVal = statusCell.v.toString().toLowerCase();
+                            if (sVal.includes('warning')) { rowBg = "FFEB9C"; rowFont = "9C5700"; }
+                            else if (sVal.includes('danger')) { rowBg = "FFC7CE"; rowFont = "9C0006"; }
+                            else if (sVal.includes('normal')) { rowBg = "C6EFCE"; rowFont = "006100"; }
+                        }
+                    }
+                    for (let C = 0; C <= 5; C++) {
+                        const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+                        const cell = ws[cellAddr];
+                        if (!cell) continue;
+                        if (!cell.s) cell.s = {};
+                        cell.s.border = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
+                        if (R === 0 || R === 1) { cell.s.font = { bold: true, sz: 14 }; cell.s.alignment = { horizontal: "center", vertical: "center" }; }
+                        else if (R === 2) { cell.s.fill = { fgColor: { rgb: "4472C4" } }; cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; cell.s.alignment = { horizontal: "center", vertical: "center" }; }
+                        else if (R >= 3) { cell.s.alignment = { horizontal: "left", vertical: "center" }; if (rowBg) { cell.s.fill = { fgColor: { rgb: rowBg } }; cell.s.font = { color: { rgb: rowFont }, bold: true }; } }
+                    }
+                }
                 
-                XLSX.writeFile(wb, `Laporan_3_Chart_${dateStr.replace(/\//g, '-')}.xlsx`);
-                
+                XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
+                XLSX.writeFile(wb, `Laporan_${dateStr.replace(/\//g, '-')}.xlsx`);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             });
         }
 
         // ============================================
-        // ★ HELPER: STYLE UNTUK EXCEL ★
-        // ============================================
-        function styleWorksheet(ws, lastRow) {
-            for (let R = 0; R <= lastRow; R++) {
-                let rowBg = null, rowFont = null;
-                if (R >= 3) {
-                    const statusAddr = XLSX.utils.encode_cell({ r: R, c: 3 });
-                    const statusCell = ws[statusAddr];
-                    if (statusCell && statusCell.v) {
-                        const sVal = statusCell.v.toString().toLowerCase();
-                        if (sVal.includes('warning')) { rowBg = "FFEB9C"; rowFont = "9C5700"; }
-                        else if (sVal.includes('danger')) { rowBg = "FFC7CE"; rowFont = "9C0006"; }
-                        else if (sVal.includes('normal')) { rowBg = "C6EFCE"; rowFont = "006100"; }
-                    }
-                }
-
-                for (let C = 0; C <= 3; C++) {
-                    const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
-                    const cell = ws[cellAddr];
-                    if (!cell) continue;
-                    if (!cell.s) cell.s = {};
-
-                    cell.s.border = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
-
-                    if (R === 0 || R === 1) {
-                        cell.s.font = { bold: true, sz: 14 };
-                        cell.s.alignment = { horizontal: "center", vertical: "center" };
-                    } else if (R === 2) {
-                        cell.s.fill = { fgColor: { rgb: "4472C4" } };
-                        cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 };
-                        cell.s.alignment = { horizontal: "center", vertical: "center" };
-                    } else if (R >= 3) {
-                        cell.s.alignment = { horizontal: "left", vertical: "center" };
-                        if (rowBg) {
-                            cell.s.fill = { fgColor: { rgb: rowBg } };
-                            cell.s.font = { color: { rgb: rowFont }, bold: true };
-                        }
-                    }
-                }
-            }
-        }
-
-        // ============================================
-        // 5. ★ AMBIL DATA 30 MINIT TERAKHIR SAHAJA (Guna historyRef global) ★
+        // 5. AMBIL HISTORY
         // ============================================
         function getAllHistoryData(callback) {
-            // historyRef telah diisytihar dalam firebase-config.js
+            const historyRef = database.ref('sensor_data/history');
             historyRef.once('value').then((snapshot) => {
                 const val = snapshot.val();
                 if (!val) { callback([]); return; }
-
-                // ★ TAPISAN 30 MINIT ★
-                const now = new Date();
-                const cutoffTime = new Date(now.getTime() - (30 * 60 * 1000));
-                const cutoffDateStr = cutoffTime.toISOString().split('T')[0];
-                const cutoffTimeStr = cutoffTime.toTimeString().split(' ')[0];
-
                 const allData = [];
                 const dates = Object.keys(val).sort();
                 dates.forEach(date => {
-                    if (date < cutoffDateStr) return;
                     const times = Object.keys(val[date]).sort();
                     times.forEach(time => {
-                        if (date === cutoffDateStr && time < cutoffTimeStr) return;
                         const record = val[date][time];
                         if (record) {
                             allData.push({
@@ -582,8 +507,7 @@
                         }
                     });
                 });
-
-                console.log(`📊 Export: Found ${allData.length} records (Last 30 min)`);
+                console.log(`📊 Export: Found ${allData.length} history records`);
                 callback(allData);
             }).catch((error) => {
                 console.error("❌ Error reading history:", error);
@@ -592,14 +516,13 @@
         }
 
         // ============================================
-        // 6. ★ AMBIL DATA TERKINI DARI 'latest' (Guna sensorRef global) ★
+        // 6. LISTEN LATEST
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
             console.log("🔄 Menunggu data terkini dari Firebase (node 'latest')...");
-            
-            // sensorRef telah diisytihar dalam firebase-config.js
-            sensorRef.on('value', (snapshot) => {
+            const latestRef = database.ref('sensor_data/latest');
+            latestRef.on('value', (snapshot) => {
                 const latestData = snapshot.val();
                 if (latestData) {
                     console.log("📥 Data 'latest' diterima:", latestData);
