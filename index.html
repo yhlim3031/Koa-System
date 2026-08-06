@@ -335,39 +335,24 @@
             document.getElementById('statusDot').className = 'status-dot ' + sysClass;
             document.getElementById('statusText').textContent = sysText;
 
-            // Update Legend
-                       // Update Legend - LOGIK DIPERBAIKI (TIADA LUBANG GAP)
+            // ★ Update Legend - LOGIK BARU YANG PALING RINGKAS DAN TEPAT ★
             const tempL = document.getElementById('tempLegend');
-            let tempHtml = '';
-            if (temp >= 45) {
-                tempHtml = `<span class="legend-item">🟠 WARNING 37°C</span><span class="legend-item active-danger">🔴 DANGER 45°C (🚨 AKTIF)</span>`;
-            } else if (temp >= 37) { // 37, 38, 39... sehingga 44 akan masuk sini
-                tempHtml = `<span class="legend-item active-warning">🟠 WARNING 37°C (⚠️ AKTIF)</span><span class="legend-item">🔴 DANGER 45°C</span>`;
-            } else {
-                tempHtml = `<span class="legend-item">🟠 WARNING 37°C</span><span class="legend-item">🔴 DANGER 45°C</span>`;
-            }
-            tempL.innerHTML = tempHtml;
+            // Jika 37-44 -> Warning. Jika >=45 -> Danger. Lain -> Normal.
+            tempL.innerHTML = (temp >= 37 && temp <= 44 ? `<span class="legend-item active-warning">🟠 WARNING 37°C (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 37°C</span>`) +
+                              (temp >= 45 ? `<span class="legend-item active-danger">🔴 DANGER 45°C (🚨 AKTIF)</span>` : `<span class="legend-item">🔴 DANGER 45°C</span>`);
 
-            // Humidity (Tiada perubahan logik, cuma kemaskan)
             const humidL = document.getElementById('humidLegend');
             humidL.innerHTML = humid >= 70 ? `<span class="legend-item active-warning">🟠 WARNING 70% (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 70%</span>`;
 
-            // Gas - LOGIK DIPERBAIKI
             const gasL = document.getElementById('gasLegend');
-            let gasHtml = '';
-            if (gas > 700) {
-                gasHtml = `<span class="legend-item">🟠 WARNING 301</span><span class="legend-item active-danger">🔴 DANGER 701 (🚨 AKTIF)</span>`;
-            } else if (gas >= 301) {
-                gasHtml = `<span class="legend-item active-warning">🟠 WARNING 301 (⚠️ AKTIF)</span><span class="legend-item">🔴 DANGER 701</span>`;
-            } else {
-                gasHtml = `<span class="legend-item">🟠 WARNING 301</span><span class="legend-item">🔴 DANGER 701</span>`;
-            }
-            gasL.innerHTML = gasHtml;
+            gasL.innerHTML = (gas >= 301 && gas <= 700 ? `<span class="legend-item active-warning">🟠 WARNING 301 (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 301</span>`) +
+                             (gas > 700 ? `<span class="legend-item active-danger">🔴 DANGER 701 (🚨 AKTIF)</span>` : `<span class="legend-item">🔴 DANGER 701</span>`);
 
             document.getElementById('lastUpdate').textContent = 'Last Update: ' + new Date().toLocaleString('ms-MY', { hour12: false });
             updateCharts(temp, humid, gas);
+        }
 
-         // ============================================
+        // ============================================
         // 4. ★ EXPORT EXCEL (ALIGN LEFT, BORDER, WARNA SELURUH BARIS) ★
         // ============================================
         function exportToExcel() {
@@ -418,9 +403,7 @@
                 ws['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 14 }, { wch: 20 }];
                 ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }];
 
-                // ==========================================
                 // ★ LOGIK BORDER, ALIGN LEFT & WARNA SELURUH BARIS ★
-                // ==========================================
                 const lastRow = excelData.length - 1; 
                 for (let R = 0; R <= lastRow; R++) {
                     
@@ -488,6 +471,7 @@
                 btn.disabled = false;
             });
         }
+
         // ============================================
         // 5. ★ AMBIL SEMUA HISTORY UNTUK EXCEL ★
         // ============================================
