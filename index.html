@@ -1,51 +1,136 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Monitoring Penggera Kebakaran</title>
+    
+    <!-- Chart.js & FontAwesome & XLSX -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- ===== FIREBASE SDK ===== -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
-    </script>
+    <style>
+        /* ==============================
+           CSS (DASHBOARD & BUTTON)
+           ============================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e17; color: #e0e0e0; min-height: 100vh; padding: 20px;
+        }
 
-    <!-- ===== CHART.JS (VERSION 3) ===== -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js">
-    </script>
+        .header {
+            background: linear-gradient(135deg, #141b2b, #1a2a3a);
+            border: 1px solid #1a2a3a; border-radius: 16px;
+            padding: 1.5rem 2rem; max-width: 1400px; margin: 0 auto 2rem auto;
+        }
+        .header-content { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+        .header-icon { font-size: 2.5rem; color: #ff6b6b; }
+        .header-content h1 {
+            font-size: 1.8rem; font-weight: 700;
+            background: linear-gradient(135deg, #ff6b6b, #ffa502);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; flex: 1;
+        }
+        .header-actions { display: flex; align-items: center; gap: 1rem; }
+        
+        /* BUTANG EXPORT (Flexbox - Tiada Ruang Kosong) */
+        .btn-export {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: auto !important; padding: 0.6rem 1.2rem; 
+            background: linear-gradient(135deg, #1a7a3a, #28a745); color: white;
+            border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); }
+        .btn-export:active { transform: scale(0.95); }
+        .btn-export i { font-size: 1.1rem; }
 
-    <!-- ===== SHEETJS (XLSX) UNTUK EXPORT EXCEL ===== -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
-    </script>
+        .status-badge {
+            display: flex; align-items: center; gap: 10px;
+            background: #0a0e17; padding: 0.5rem 1.2rem;
+            border-radius: 50px; border: 1px solid #1a2a3a; font-size: 0.9rem;
+        }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; background: #555; }
+        .status-dot.normal { background: #27ae60; box-shadow: 0 0 10px #27ae60; }
+        .status-dot.warning { background: #f39c12; box-shadow: 0 0 10px #f39c12; }
+        .status-dot.danger { background: #e74c3c; box-shadow: 0 0 10px #e74c3c; animation: pulse 1s infinite; }
 
-    <!-- ===== FILE SAVER UNTUK DOWNLOAD ===== -->
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js">
-    </script>
+        .header-sub { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #1a2a3a; font-size: 0.85rem; color: #8899aa; text-align: right; }
 
-    <!-- ===== FONT AWESOME ===== -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+        .container { max-width: 1400px; margin: 0 auto; }
 
-    <!-- ===== CUSTOM CSS ===== -->
-    <link rel="stylesheet" href="style.css" />
+        /* Sensor Grid */
+        .sensor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .sensor-card {
+            background: linear-gradient(135deg, #141b2b, #1a2a3a); border: 1px solid #1a2a3a;
+            border-radius: 16px; padding: 1.8rem; display: flex; align-items: center; gap: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .sensor-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+        .card-icon {
+            width: 70px; height: 70px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem; flex-shrink: 0;
+        }
+        .card-temp .card-icon { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
+        .card-humid .card-icon { background: rgba(78, 205, 196, 0.15); color: #4ecdc4; }
+        .card-gas .card-icon { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
+        .card-body { flex: 1; }
+        .card-body h3 { font-size: 0.85rem; color: #8899aa; font-weight: 400; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem; }
+        .card-value { font-size: 2.5rem; font-weight: 700; line-height: 1.2; }
+        .card-value .unit { font-size: 1rem; color: #8899aa; font-weight: 400; margin-left: 4px; }
+        .card-status { font-size: 0.8rem; margin-top: 0.2rem; font-weight: 500; }
+        .card-status.normal { color: #27ae60; }
+        .card-status.warning { color: #f39c12; }
+        .card-status.danger { color: #e74c3c; }
 
+        /* Charts */
+        .charts-section { background: linear-gradient(135deg, #141b2b, #1a2a3a); border: 1px solid #1a2a3a; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
+        .charts-section h2 { font-size: 1.4rem; color: #e0e0e0; margin-bottom: 0.3rem; }
+        .charts-section h2 i { color: #4ecdc4; margin-right: 10px; }
+        .chart-sub { color: #8899aa; font-size: 0.85rem; margin-bottom: 1.5rem; }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+        .chart-box { background: #0a0e17; border-radius: 12px; padding: 1.2rem; border: 1px solid #1a2a3a; }
+        .chart-box h3 { font-size: 0.9rem; color: #8899aa; font-weight: 400; margin-bottom: 0.8rem; text-align: center; }
+        .chart-container { position: relative; height: 200px; width: 100%; }
+
+        /* Legend Boxes (Wajib ada ID untuk JS update) */
+        .legend-box {
+            display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+            padding: 8px 12px; margin-top: 10px; background: #0a0e17;
+            border-radius: 8px; border: 1px solid #1a2a3a; min-height: 32px;
+        }
+        .legend-item {
+            font-size: 11px; font-weight: 500; color: #8899aa;
+            padding: 2px 10px; border-radius: 4px;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+        .legend-item.active-warning { color: #f39c12; border-color: #f39c12; background: rgba(243, 156, 18, 0.15); box-shadow: 0 0 15px rgba(243, 156, 18, 0.2); animation: pulse 1.5s infinite; }
+        .legend-item.active-danger { color: #e74c3c; border-color: #e74c3c; background: rgba(231, 76, 60, 0.15); box-shadow: 0 0 15px rgba(231, 76, 60, 0.2); animation: pulse 1s infinite; }
+
+        .footer { text-align: center; padding: 1.5rem 0; color: #556677; font-size: 0.85rem; border-top: 1px solid #1a2a3a; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; } .header { padding: 1rem; } .header-content h1 { font-size: 1.2rem; }
+            .sensor-grid { grid-template-columns: 1fr; } .charts-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- ===== HEADER / TITLE ===== -->
+    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-content">
             <i class="fas fa-fire-extinguisher header-icon"></i>
             <h1>SISTEM MONITORING PENGGERA KEBAKARAN</h1>
             <div class="header-actions">
-                
-                <!-- BUTANG EXPORT (Icon Excel dah buang, tinggal Chart je) -->
                 <button class="btn-export" onclick="exportToExcel()">
                     <i class="fas fa-chart-bar"></i> Export Report
                 </button>
-
                 <div class="status-badge" id="systemStatus">
-                    <span class="status-dot"></span>
+                    <span class="status-dot" id="statusDot"></span>
                     <span id="statusText">Menunggu Data...</span>
                 </div>
             </div>
@@ -55,110 +140,361 @@
         </div>
     </header>
 
-    <!-- ===== MAIN CONTENT ===== -->
-    <main class="container">
-
-        <!-- ===== 3 SENSOR CARDS ===== -->
-        <section class="sensor-grid">
-
+    <!-- ===== DASHBOARD CARDS ===== -->
+    <div class="container">
+        <div class="sensor-grid">
+            <!-- Temperature -->
             <div class="sensor-card card-temp">
-                <div class="card-icon">
-                    <i class="fas fa-thermometer-half"></i>
-                </div>
+                <div class="card-icon"><i class="fas fa-thermometer-half"></i></div>
                 <div class="card-body">
                     <h3>Temperature</h3>
-                    <div class="card-value">
-                        <span id="tempValue">--</span>
-                        <span class="unit">°C</span>
-                    </div>
-                    <div class="card-status" id="tempStatus">--</div>
+                    <div class="card-value"><span id="tempValue">--</span> <span class="unit">°C</span></div>
+                    <div class="card-status normal" id="tempStatus">● Normal</div>
                 </div>
             </div>
-
+            <!-- Humidity -->
             <div class="sensor-card card-humid">
-                <div class="card-icon">
-                    <i class="fas fa-droplet"></i>
-                </div>
+                <div class="card-icon"><i class="fas fa-tint"></i></div>
                 <div class="card-body">
                     <h3>Humidity</h3>
-                    <div class="card-value">
-                        <span id="humidValue">--</span>
-                        <span class="unit">%</span>
-                    </div>
-                    <div class="card-status" id="humidStatus">--</div>
+                    <div class="card-value"><span id="humidValue">--</span> <span class="unit">%</span></div>
+                    <div class="card-status normal" id="humidStatus">● Normal</div>
                 </div>
             </div>
-
+            <!-- Gas -->
             <div class="sensor-card card-gas">
-                <div class="card-icon">
-                    <i class="fas fa-smog"></i>
-                </div>
+                <div class="card-icon"><i class="fas fa-fire"></i></div>
                 <div class="card-body">
                     <h3>Gas MQ2</h3>
-                    <div class="card-value">
-                        <span id="gasValue">--</span>
-                        <span class="unit">ADC</span>
-                    </div>
-                    <div class="card-status" id="gasStatus">--</div>
+                    <div class="card-value"><span id="gasValue">--</span> <span class="unit">ADC</span></div>
+                    <div class="card-status normal" id="gasStatus">● Normal</div>
                 </div>
             </div>
+        </div>
 
-        </section>
-
-        <!-- ===== 3 REALTIME GRAPHS ===== -->
-        <section class="charts-section">
+        <!-- ===== CHARTS & LEGEND ===== -->
+        <div class="charts-section">
             <h2><i class="fas fa-chart-line"></i> Realtime Data Graph</h2>
-            <p class="chart-sub">Update setiap 5 saat</p>
-
+            <div class="chart-sub">Update setiap 5 saat</div>
+            
             <div class="charts-grid">
-
-                <!-- TEMPERATURE CHART -->
+                <!-- Temp Chart -->
                 <div class="chart-box">
-                    <h3>🌡️ Temperature</h3>
-                    <div class="chart-container">
-                        <canvas id="tempChart"></canvas>
-                    </div>
+                    <h3><i class="fas fa-thermometer-half" style="color:#ff6b6b;"></i> Temperature</h3>
+                    <div class="chart-container"><canvas id="tempChart"></canvas></div>
                     <div class="legend-box" id="tempLegend">
-                        <span class="legend-item">🟠 WARNING 37°C</span>
-                        <span class="legend-item">🔴 DANGER 45°C</span>
+                        <span class="legend-item">WARNING 37°C</span>
+                        <span class="legend-item">DANGER 45°C</span>
                     </div>
                 </div>
-
-                <!-- HUMIDITY CHART -->
+                <!-- Humid Chart -->
                 <div class="chart-box">
-                    <h3>💧 Humidity</h3>
-                    <div class="chart-container">
-                        <canvas id="humidChart"></canvas>
-                    </div>
+                    <h3><i class="fas fa-tint" style="color:#4ecdc4;"></i> Humidity</h3>
+                    <div class="chart-container"><canvas id="humidChart"></canvas></div>
                     <div class="legend-box" id="humidLegend">
-                        <span class="legend-item">🟠 WARNING 70%</span>
+                        <span class="legend-item">WARNING 70%</span>
                     </div>
                 </div>
-
-                <!-- GAS MQ2 CHART -->
+                <!-- Gas Chart -->
                 <div class="chart-box">
-                    <h3>💨 Gas MQ2</h3>
-                    <div class="chart-container">
-                        <canvas id="gasChart"></canvas>
-                    </div>
+                    <h3><i class="fas fa-fire" style="color:#f39c12;"></i> Gas MQ2</h3>
+                    <div class="chart-container"><canvas id="gasChart"></canvas></div>
                     <div class="legend-box" id="gasLegend">
-                        <span class="legend-item">🟠 WARNING 301</span>
-                        <span class="legend-item">🔴 DANGER 701</span>
+                        <span class="legend-item">WARNING 301</span>
+                        <span class="legend-item">DANGER 701</span>
                     </div>
                 </div>
-
             </div>
-        </section>
+        </div>
+    </div>
 
-        <footer class="footer">
-            <p>© 2026 Sistem Monitoring Penggera Kebakaran IoT</p>
-        </footer>
+    <footer class="footer">&copy; 2026 Sistem Monitoring Penggera Kebakaran.</footer>
 
-    </main>
+    <!-- ===== JAVASCRIPT (FULL) ===== -->
+    <script>
+        // ============================================
+        // 1. FIREBASE SETUP (SILA TUKAR URL ANDA)
+        // ============================================
+        // ⚠️ NOTA: Anda perlu masukkan Firebase URL anda di sini untuk system berfungsi
+        // Contoh:
+        // const database = firebase.database();
+        // const sensorRef = database.ref('sensor_data/latest');
+        
+        // Untuk tujuan demo, saya buat dummy getHistoryData supaya Excel boleh test:
+        function getHistoryData(callback) {
+            // Dummy data untuk uji Export Excel
+            const dummyData = [
+                { timestamp: '2026-08-06 09:00:00', temperature: 28.5, humidity: 65.0, gas: 120 },
+                { timestamp: '2026-08-06 09:00:05', temperature: 45.0, humidity: 70.0, gas: 701 } // Danger
+            ];
+            callback(dummyData);
+        }
 
-    <!-- ===== JAVASCRIPT ===== -->
-    <script src="firebase-config.js"></script>
-    <script src="dashboard.js"></script>
+        // ============================================
+        // 2. CHART SETUP
+        // ============================================
+        let tempChart, humidChart, gasChart;
+        const MAX_POINTS = 20;
+        let chartData = { labels: [], temp: [], humid: [], gas: [] };
 
+        // Plugin Garisan Putus-putus
+        const warningLinesPlugin = {
+            id: 'warningLines',
+            afterDraw: function(chart) {
+                const ctx = chart.ctx;
+                const chartArea = chart.chartArea;
+                if (!chartArea) return;
+                const yScale = chart.scales.y;
+                const lines = chart.config.options.customLines || [];
+                lines.forEach(line => {
+                    const yPixel = yScale.getPixelForValue(line.value);
+                    if (yPixel >= chartArea.top && yPixel <= chartArea.bottom) {
+                        ctx.save();
+                        ctx.strokeStyle = line.color;
+                        ctx.lineWidth = line.width || 2;
+                        ctx.setLineDash(line.dash || [6, 4]);
+                        ctx.beginPath();
+                        ctx.moveTo(chartArea.left, yPixel);
+                        ctx.lineTo(chartArea.right, yPixel);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                });
+            }
+        };
+        Chart.register(warningLinesPlugin);
+
+        function initCharts() {
+            // Temperature
+            tempChart = new Chart(document.getElementById('tempChart'), {
+                type: 'line',
+                data: { labels: chartData.labels, datasets: [{ label: 'Temp', data: chartData.temp, borderColor: '#9b59b6', backgroundColor: 'rgba(155,89,182,0.15)', fill: true, tension: 0.4, pointRadius: 4, borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#556677', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: 'rgba(136,153,170,0.08)' } }, y: { beginAtZero: true, max: 50, ticks: { color: '#556677', font: { size: 9 }, stepSize: 10 }, grid: { color: 'rgba(136,153,170,0.08)' } } }, customLines: [{ value: 37, color: '#f39c12', dash: [6, 4] }, { value: 45, color: '#e74c3c', dash: [6, 4] }] }
+            });
+            // Humidity
+            humidChart = new Chart(document.getElementById('humidChart'), {
+                type: 'line',
+                data: { labels: chartData.labels, datasets: [{ label: 'Humid', data: chartData.humid, borderColor: '#00d2d3', backgroundColor: 'rgba(0,210,211,0.15)', fill: true, tension: 0.4, pointRadius: 4, borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#556677', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: 'rgba(136,153,170,0.08)' } }, y: { beginAtZero: true, max: 100, ticks: { color: '#556677', font: { size: 9 }, stepSize: 10 }, grid: { color: 'rgba(136,153,170,0.08)' } } }, customLines: [{ value: 70, color: '#f39c12', dash: [6, 4] }] }
+            });
+            // Gas
+            gasChart = new Chart(document.getElementById('gasChart'), {
+                type: 'line',
+                data: { labels: chartData.labels, datasets: [{ label: 'Gas', data: chartData.gas, borderColor: '#00b894', backgroundColor: 'rgba(0,184,148,0.15)', fill: true, tension: 0.4, pointRadius: 4, borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: { duration: 300 }, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#556677', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: 'rgba(136,153,170,0.08)' } }, y: { beginAtZero: true, max: 1000, ticks: { color: '#556677', font: { size: 9 }, stepSize: 100 }, grid: { color: 'rgba(136,153,170,0.08)' } } }, customLines: [{ value: 301, color: '#f39c12', dash: [6, 4] }, { value: 701, color: '#e74c3c', dash: [6, 4] }] }
+            });
+        }
+
+        function updateCharts(temp, humid, gas) {
+            const now = new Date();
+            const label = now.toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            chartData.labels.push(label);
+            chartData.temp.push(Number(temp) || 0);
+            chartData.humid.push(Number(humid) || 0);
+            chartData.gas.push(Number(gas) || 0);
+            if (chartData.labels.length > MAX_POINTS) { chartData.labels.shift(); chartData.temp.shift(); chartData.humid.shift(); chartData.gas.shift(); }
+            tempChart.update(); humidChart.update(); gasChart.update();
+        }
+
+        // ============================================
+        // 3. UPDATE DASHBOARD & LEGEND
+        // ============================================
+        function getTemperatureStatus(temp) {
+            if (temp >= 45) return { text: '🚨 DANGER', class: 'danger' };
+            if (temp >= 37) return { text: '⚠️ WARNING', class: 'warning' };
+            return { text: '✅ Normal', class: 'normal' };
+        }
+        function getHumidityStatus(humid) {
+            if (humid >= 70) return { text: '⚠️ WARNING', class: 'warning' };
+            return { text: '✅ Normal', class: 'normal' };
+        }
+        function getGasStatus(gas) {
+            if (gas > 700) return { text: '🚨 DANGER', class: 'danger' };
+            if (gas >= 301) return { text: '⚠️ WARNING', class: 'warning' };
+            return { text: '✅ Normal', class: 'normal' };
+        }
+
+        function updateDashboard(data) {
+            if (!data) return;
+            const temp = data.temperature || 0;
+            const humid = data.humidity || 0;
+            const gas = data.gas || 0;
+
+            // Update Cards
+            document.getElementById('tempValue').textContent = temp;
+            const tStat = getTemperatureStatus(temp);
+            const tEl = document.getElementById('tempStatus');
+            tEl.textContent = tStat.text; tEl.className = 'card-status ' + tStat.class;
+
+            document.getElementById('humidValue').textContent = humid;
+            const hStat = getHumidityStatus(humid);
+            const hEl = document.getElementById('humidStatus');
+            hEl.textContent = hStat.text; hEl.className = 'card-status ' + hStat.class;
+
+            document.getElementById('gasValue').textContent = gas;
+            const gStat = getGasStatus(gas);
+            const gEl = document.getElementById('gasStatus');
+            gEl.textContent = gStat.text; gEl.className = 'card-status ' + gStat.class;
+
+            // System Status (Priority: Danger > Warning > Normal)
+            let sysClass = 'normal', sysText = '✅ Sistem Normal';
+            if (tStat.class === 'danger' || gStat.class === 'danger') { sysClass = 'danger'; sysText = '🚨 DANGER!'; }
+            else if (tStat.class === 'warning' || gStat.class === 'warning' || hStat.class === 'warning') { sysClass = 'warning'; sysText = '⚠️ WARNING'; }
+            
+            document.getElementById('statusDot').className = 'status-dot ' + sysClass;
+            document.getElementById('statusText').textContent = sysText;
+
+            // Update Legend
+            const tempL = document.getElementById('tempLegend');
+            tempL.innerHTML = (temp >= 37 && temp <= 40 ? `<span class="legend-item active-warning">🟠 WARNING 37°C (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 37°C</span>`) +
+                              (temp >= 45 ? `<span class="legend-item active-danger">🔴 DANGER 45°C (🚨 AKTIF)</span>` : `<span class="legend-item">🔴 DANGER 45°C</span>`);
+
+            const humidL = document.getElementById('humidLegend');
+            humidL.innerHTML = (humid >= 70 ? `<span class="legend-item active-warning">🟠 WARNING 70% (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 70%</span>`);
+
+            const gasL = document.getElementById('gasLegend');
+            gasL.innerHTML = ((gas >= 301 && gas <= 700) ? `<span class="legend-item active-warning">🟠 WARNING 301 (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 301</span>`) +
+                             (gas > 700 ? `<span class="legend-item active-danger">🔴 DANGER 701 (🚨 AKTIF)</span>` : `<span class="legend-item">🔴 DANGER 701</span>`);
+
+            // Last Update
+            document.getElementById('lastUpdate').textContent = 'Last Update: ' + new Date().toLocaleString('ms-MY', { hour12: false });
+            
+            updateCharts(temp, humid, gas);
+        }
+
+        // ============================================
+        // 4. ★ EXPORT EXCEL YANG BETUL ★
+        // ============================================
+        function exportToExcel() {
+            const btn = document.querySelector('.btn-export');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            btn.disabled = true;
+            
+            getHistoryData((data) => {
+                if (!data || data.length === 0) {
+                    alert('⚠️ Tiada data untuk di export.');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+                
+                const wb = XLSX.utils.book_new();
+                const excelData = [];
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('ms-MY');
+                const timeStr = now.toLocaleTimeString('ms-MY', { hour12: false });
+                
+                excelData.push(['LAPORAN DATA SISTEM MONITORING PENGGERA KEBAKARAN']);
+                excelData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
+                excelData.push(['Bil', 'Masa', 'Suhu (°C)', 'Kelembapan (%)', 'Gas (ADC)', 'Status']);
+                
+                let bil = 1;
+                data.forEach(row => {
+                    const status = getTemperatureStatus(row.temperature); // Guna logik sama utk demo
+                    let statusText = status.text.replace(/[^\w\s]/gi, '').trim(); // Buang Emoji
+                    if(statusText === 'DANGER') statusText = 'DANGER';
+                    else if(statusText === 'WARNING') statusText = 'WARNING';
+                    else statusText = 'NORMAL';
+
+                    excelData.push([
+                        bil++,
+                        row.timestamp.split(' ')[1],
+                        Number(row.temperature).toFixed(1),
+                        Number(row.humidity).toFixed(1),
+                        Math.round(row.gas),
+                        statusText 
+                    ]);
+                });
+                
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                ws['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 14 }, { wch: 20 }];
+                ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }];
+
+                // ★ LOGIK BORDER & WARNA YANG BETUL ★
+                // Kita hanya pusing pada jumlah baris excelData (tidak pusing sel kosong)
+                const lastRow = excelData.length - 1; 
+                for (let R = 0; R <= lastRow; R++) {
+                    for (let C = 0; C <= 5; C++) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                        const cell = ws[cellAddress];
+                        
+                        // Jika sel tiada data, skip (Tiada Border pada sel kosong)
+                        if (!cell) continue; 
+
+                        if (!cell.s) cell.s = {};
+
+                        // 1. BORDER HITAM
+                        cell.s.border = {
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
+                        };
+
+                        // 2. GAYA TITLE (Row 0,1)
+                        if (R === 0 || R === 1) {
+                            cell.s.font = { bold: true, sz: 14 };
+                            cell.s.alignment = { horizontal: "center", vertical: "center" };
+                        } 
+                        // 3. GAYA HEADER (Row 2)
+                        else if (R === 2) {
+                            cell.s.fill = { fgColor: { rgb: "4472C4" } }; 
+                            cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; 
+                            cell.s.alignment = { horizontal: "center", vertical: "center" };
+                        } 
+                        // 4. GAYA DATA (Row 3 dan ke bawah)
+                        else if (R >= 3) {
+                            // ★ ALIGN LEFT UNTUK SEMUA DATA ★
+                            cell.s.alignment = { horizontal: "left", vertical: "center" };
+
+                            // ★ WARNAKAN BACKGROUND MENGIKUT STATUS (Kolom F / Index 5) ★
+                            if (C === 5) {
+                                let statusVal = cell.v.toString().toLowerCase();
+
+                                if (statusVal.includes('warning')) {
+                                    cell.s.fill = { fgColor: { rgb: "FFEB9C" } }; // Oren
+                                    cell.s.font = { color: { rgb: "9C5700" }, bold: true };
+                                } 
+                                else if (statusVal.includes('danger')) {
+                                    cell.s.fill = { fgColor: { rgb: "FFC7CE" } }; // Merah
+                                    cell.s.font = { color: { rgb: "9C0006" }, bold: true };
+                                } 
+                                else if (statusVal.includes('normal')) {
+                                    cell.s.fill = { fgColor: { rgb: "C6EFCE" } }; // Hijau
+                                    cell.s.font = { color: { rgb: "006100" } };
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
+                const fileName = `Laporan_${dateStr.replace(/\//g, '-')}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        // ============================================
+        // 5. INIT
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            
+            // Simulasi data masuk (Untuk test Dashboard)
+            console.log("🔄 Menunggu data dari Firebase...");
+            // Gantikan bahagian ini dengan Firebase .on('value') anda.
+            // Contoh simulasi:
+            setTimeout(() => {
+                updateDashboard({ temperature: 28.5, humidity: 65, gas: 120 });
+            }, 500);
+            setTimeout(() => {
+                updateDashboard({ temperature: 45.0, humidity: 70, gas: 700 });
+            }, 3000);
+        });
+    </script>
 </body>
 </html>
