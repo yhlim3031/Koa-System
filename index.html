@@ -351,8 +351,8 @@
             updateCharts(temp, humid, gas);
         }
 
-        // ============================================
-        // 4. ★ EXPORT EXCEL (ALIGN LEFT, BORDER, & WARNA SELURUH BARIS) ★
+         // ============================================
+        // 4. ★ EXPORT EXCEL (ALIGN LEFT, BORDER, WARNA SELURUH BARIS) ★
         // ============================================
         function exportToExcel() {
             const btn = document.querySelector('.btn-export');
@@ -403,42 +403,39 @@
                 ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }];
 
                 // ==========================================
-                // ★ LOGIK BORDER & WARNA BARIS ★
+                // ★ LOGIK BORDER, ALIGN LEFT & WARNA SELURUH BARIS ★
                 // ==========================================
                 const lastRow = excelData.length - 1; 
                 for (let R = 0; R <= lastRow; R++) {
                     
-                    // 1. Tentukan warna untuk seluruh baris (R) berdasarkan Status di Kolom F
-                    let rowBgColor = null;
-                    let rowFontColor = null;
+                    // 1. Tentukan warna baris berdasarkan Status di Kolom F (Index 5)
+                    let rowBg = null;
+                    let rowFont = null;
                     
                     if (R >= 3) {
-                        const statusCellAddr = XLSX.utils.encode_cell({ r: R, c: 5 });
-                        const statusCell = ws[statusCellAddr];
+                        const statusAddr = XLSX.utils.encode_cell({ r: R, c: 5 });
+                        const statusCell = ws[statusAddr];
                         if (statusCell && statusCell.v) {
-                            const statusVal = statusCell.v.toString().toLowerCase();
-                            if (statusVal === 'warning' || statusVal.includes('warning')) {
-                                rowBgColor = "FFEB9C";  // Oren
-                                rowFontColor = "9C5700";
-                            } else if (statusVal === 'danger' || statusVal.includes('danger')) {
-                                rowBgColor = "FFC7CE";  // Merah
-                                rowFontColor = "9C0006";
-                            } else if (statusVal === 'normal' || statusVal.includes('normal')) {
-                                rowBgColor = "C6EFCE";  // Hijau
-                                rowFontColor = "006100";
+                            const sVal = statusCell.v.toString().toLowerCase();
+                            if (sVal.includes('warning')) {
+                                rowBg = "FFEB9C"; rowFont = "9C5700";
+                            } else if (sVal.includes('danger')) {
+                                rowBg = "FFC7CE"; rowFont = "9C0006";
+                            } else if (sVal.includes('normal')) {
+                                rowBg = "C6EFCE"; rowFont = "006100";
                             }
                         }
                     }
 
                     // 2. Loop untuk setiap kolum (A hingga F)
                     for (let C = 0; C <= 5; C++) {
-                        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-                        const cell = ws[cellAddress];
+                        const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+                        const cell = ws[cellAddr];
                         if (!cell) continue; 
 
                         if (!cell.s) cell.s = {};
 
-                        // ★ A. BORDER HITAM UNTUK SEMUA SEL ★
+                        // ★ BORDER HITAM (Untuk semua sel) ★
                         cell.s.border = {
                             top: { style: "thin", color: { rgb: "000000" } },
                             bottom: { style: "thin", color: { rgb: "000000" } },
@@ -446,25 +443,24 @@
                             right: { style: "thin", color: { rgb: "000000" } }
                         };
 
-                        // ★ B. GAYA TITLE & HEADER (Center) ★
+                        // ★ GAYA HEADER (Row 0 & 1 - Title, Row 2 - Tajuk Kolum) ★
                         if (R === 0 || R === 1) {
                             cell.s.font = { bold: true, sz: 14 };
-                            cell.s.alignment = { horizontal: "center", vertical: "center" };
-                        } 
-                        else if (R === 2) {
-                            cell.s.fill = { fgColor: { rgb: "4472C4" } }; // Latar Belakang Biru
+                            cell.s.alignment = { horizontal: "center", vertical: "center" }; // Center untuk Tajuk
+                        } else if (R === 2) {
+                            cell.s.fill = { fgColor: { rgb: "4472C4" } }; // Latar Belakang Biru untuk Header
                             cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; 
                             cell.s.alignment = { horizontal: "center", vertical: "center" };
                         } 
-                        // ★ C. GAYA DATA (Align Left & Warna Seluruh Baris) ★
+                        // ★ GAYA DATA (Row 3 ke bawah) ★
                         else if (R >= 3) {
-                            // 1. ALIGN LEFT UNTUK SEMUA DATA
+                            // 1. ★ ALIGN KIRI UNTUK SEMUA DATA (Bil, Masa, Suhu, dll) ★
                             cell.s.alignment = { horizontal: "left", vertical: "center" };
 
-                            // 2. WARNAKAN SELURUH BARIS (A hingga F)
-                            if (rowBgColor) {
-                                cell.s.fill = { fgColor: { rgb: rowBgColor } };
-                                cell.s.font = { color: { rgb: rowFontColor } };
+                            // 2. ★ WARNAKAN SELURUH BARIS (Dari A hingga F) ★
+                            if (rowBg) {
+                                cell.s.fill = { fgColor: { rgb: rowBg } };
+                                cell.s.font = { color: { rgb: rowFont }, bold: true };
                             }
                         }
                     }
