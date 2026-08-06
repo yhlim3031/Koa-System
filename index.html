@@ -115,7 +115,6 @@
             background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s;
         }
-        /* CLASS INI DITAIP SEMULA UNTUK BUANG AKSARA HALIMUNAN */
         .legend-item.active-warning {
             color: #f39c12;
             border-color: #f39c12;
@@ -197,27 +196,31 @@
             <div class="chart-sub">Update setiap 5 saat</div>
             
             <div class="charts-grid">
+                <!-- Temperature -->
                 <div class="chart-box">
                     <h3><i class="fas fa-thermometer-half" style="color:#ff6b6b;"></i> Temperature</h3>
                     <div class="chart-container"><canvas id="tempChart"></canvas></div>
                     <div class="legend-box" id="tempLegend">
-                        <span class="legend-item">WARNING 37°C</span>
-                        <span class="legend-item">DANGER 45°C</span>
+                        <!-- ID khusus untuk JS toggling class -->
+                        <span id="tempWarning" class="legend-item">🟠 WARNING 37°C</span>
+                        <span id="tempDanger" class="legend-item">🔴 DANGER 45°C</span>
                     </div>
                 </div>
+                <!-- Humidity -->
                 <div class="chart-box">
                     <h3><i class="fas fa-tint" style="color:#4ecdc4;"></i> Humidity</h3>
                     <div class="chart-container"><canvas id="humidChart"></canvas></div>
                     <div class="legend-box" id="humidLegend">
-                        <span class="legend-item">WARNING 70%</span>
+                        <span id="humidWarning" class="legend-item">🟠 WARNING 70%</span>
                     </div>
                 </div>
+                <!-- Gas -->
                 <div class="chart-box">
                     <h3><i class="fas fa-fire" style="color:#f39c12;"></i> Gas MQ2</h3>
                     <div class="chart-container"><canvas id="gasChart"></canvas></div>
                     <div class="legend-box" id="gasLegend">
-                        <span class="legend-item">WARNING 301</span>
-                        <span class="legend-item">DANGER 701</span>
+                        <span id="gasWarning" class="legend-item">🟠 WARNING 301</span>
+                        <span id="gasDanger" class="legend-item">🔴 DANGER 701</span>
                     </div>
                 </div>
             </div>
@@ -349,32 +352,43 @@
             document.getElementById('statusDot').className = 'status-dot ' + sysClass;
             document.getElementById('statusText').textContent = sysText;
 
-            // ★ TEMPERATURE LEGEND (CLEAN CODE - TIADA AKSARA HALIMUNAN) ★
-            const tempL = document.getElementById('tempLegend');
-            if (tStat.class === 'warning') {
-                tempL.innerHTML = '<span class="legend-item active-warning">🟠 WARNING 37°C (⚠️ AKTIF)</span><span class="legend-item">🔴 DANGER 45°C</span>';
-            } else if (tStat.class === 'danger') {
-                tempL.innerHTML = '<span class="legend-item">🟠 WARNING 37°C</span><span class="legend-item active-danger">🔴 DANGER 45°C (🚨 AKTIF)</span>';
-            } else {
-                tempL.innerHTML = '<span class="legend-item">🟠 WARNING 37°C</span><span class="legend-item">🔴 DANGER 45°C</span>';
+            // ============================================
+            // ★ UPDATE LEGEND BOXES (100% TAHAN KEPADA AKSARA HALIMUNAN) ★
+            // ============================================
+            
+            // 1. TEMPERATURE LEGEND
+            const tempWarn = document.getElementById('tempWarning');
+            const tempDanger = document.getElementById('tempDanger');
+            
+            // Buang semua class aktif dahulu
+            tempWarn.classList.remove('active-warning');
+            tempDanger.classList.remove('active-danger');
+            
+            // Tambah class mengikut status
+            if (tStat.class === 'danger') {
+                tempDanger.classList.add('active-danger');
+            } else if (tStat.class === 'warning') {
+                tempWarn.classList.add('active-warning');
             }
 
-            // ★ HUMIDITY LEGEND ★
-            const humidL = document.getElementById('humidLegend');
+            // 2. HUMIDITY LEGEND
+            const humidWarn = document.getElementById('humidWarning');
+            humidWarn.classList.remove('active-warning');
             if (hStat.class === 'warning') {
-                humidL.innerHTML = '<span class="legend-item active-warning">🟠 WARNING 70% (⚠️ AKTIF)</span>';
-            } else {
-                humidL.innerHTML = '<span class="legend-item">🟠 WARNING 70%</span>';
+                humidWarn.classList.add('active-warning');
             }
 
-            // ★ GAS LEGEND ★
-            const gasL = document.getElementById('gasLegend');
-            if (gStat.class === 'warning') {
-                gasL.innerHTML = '<span class="legend-item active-warning">🟠 WARNING 301 (⚠️ AKTIF)</span><span class="legend-item">🔴 DANGER 701</span>';
-            } else if (gStat.class === 'danger') {
-                gasL.innerHTML = '<span class="legend-item">🟠 WARNING 301</span><span class="legend-item active-danger">🔴 DANGER 701 (🚨 AKTIF)</span>';
-            } else {
-                gasL.innerHTML = '<span class="legend-item">🟠 WARNING 301</span><span class="legend-item">🔴 DANGER 701</span>';
+            // 3. GAS LEGEND
+            const gasWarn = document.getElementById('gasWarning');
+            const gasDanger = document.getElementById('gasDanger');
+            
+            gasWarn.classList.remove('active-warning');
+            gasDanger.classList.remove('active-danger');
+            
+            if (gStat.class === 'danger') {
+                gasDanger.classList.add('active-danger');
+            } else if (gStat.class === 'warning') {
+                gasWarn.classList.add('active-warning');
             }
 
             document.getElementById('lastUpdate').textContent = 'Last Update: ' + new Date().toLocaleString('ms-MY', { hour12: false });
@@ -474,18 +488,18 @@
                         // ★ GAYA HEADER (Row 0 & 1 - Title, Row 2 - Tajuk Kolum) ★
                         if (R === 0 || R === 1) {
                             cell.s.font = { bold: true, sz: 14 };
-                            cell.s.alignment = { horizontal: "center", vertical: "center" }; // Center untuk Tajuk
+                            cell.s.alignment = { horizontal: "center", vertical: "center" };
                         } else if (R === 2) {
-                            cell.s.fill = { fgColor: { rgb: "4472C4" } }; // Latar Belakang Biru untuk Header
+                            cell.s.fill = { fgColor: { rgb: "4472C4" } };
                             cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; 
                             cell.s.alignment = { horizontal: "center", vertical: "center" };
                         } 
                         // ★ GAYA DATA (Row 3 ke bawah) ★
                         else if (R >= 3) {
-                            // 1. ★ ALIGN KIRI UNTUK SEMUA DATA (Bil, Masa, Suhu, dll) ★
+                            // 1. ★ ALIGN KIRI UNTUK SEMUA DATA ★
                             cell.s.alignment = { horizontal: "left", vertical: "center" };
 
-                            // 2. ★ WARNAKAN SELURUH BARIS (Dari A hingga F) ★
+                            // 2. ★ WARNAKAN SELURUH BARIS ★
                             if (rowBg) {
                                 cell.s.fill = { fgColor: { rgb: rowBg } };
                                 cell.s.font = { color: { rgb: rowFont }, bold: true };
@@ -535,13 +549,12 @@
         }
 
         // ============================================
-        // 6. ★ AMBIL DATA TERKINI DARI 'latest' (BUKAN history) ★
+        // 6. ★ AMBIL DATA TERKINI DARI 'latest' ★
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
             console.log("🔄 Menunggu data terkini dari Firebase (node 'latest')...");
             
-            // Dengar terus pada 'sensor_data/latest'
             const latestRef = database.ref('sensor_data/latest');
             latestRef.on('value', (snapshot) => {
                 const latestData = snapshot.val();
