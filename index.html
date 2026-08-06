@@ -351,8 +351,8 @@
             updateCharts(temp, humid, gas);
         }
 
-               // ============================================
-        // 4. ★ EXPORT EXCEL (ALIGN LEFT, BORDER HITAM, WARNA) ★
+        // ============================================
+        // 4. ★ EXPORT EXCEL (ALIGN LEFT, BORDER, & WARNA SELURUH BARIS) ★
         // ============================================
         function exportToExcel() {
             const btn = document.querySelector('.btn-export');
@@ -360,7 +360,6 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             btn.disabled = true;
             
-            // Fungsi ini khas ambil SEMUA data dari 'history'
             getAllHistoryData((data) => {
                 if (!data || data.length === 0) {
                     alert('⚠️ Tiada data history untuk di export.');
@@ -385,13 +384,9 @@
                     const humid = Number(row.humidity) || 0;
                     const gas = Number(row.gas) || 0;
                     
-                    // ★ TUKAR LOGIK INI: Kita guna teks penuh untuk align dengan warna CSS ★
                     let statusText = 'NORMAL';
-                    if (temp >= 45 || gas > 700) {
-                        statusText = 'DANGER';
-                    } else if (temp >= 37 || humid >= 70 || gas >= 301) {
-                        statusText = 'WARNING';
-                    }
+                    if (temp >= 45 || gas > 700) statusText = 'DANGER';
+                    else if (temp >= 37 || humid >= 70 || gas >= 301) statusText = 'WARNING';
 
                     excelData.push([
                         bil++,
@@ -399,7 +394,7 @@
                         temp.toFixed(1),
                         humid.toFixed(1),
                         Math.round(gas),
-                        statusText // Hantar 'DANGER', 'WARNING', atau 'NORMAL'
+                        statusText
                     ]);
                 });
                 
@@ -408,10 +403,34 @@
                 ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }];
 
                 // ==========================================
-                // ★ LOGIK CSS EXCEL (WARNA & BORDER) ★
+                // ★ LOGIK BORDER & WARNA BARIS ★
                 // ==========================================
                 const lastRow = excelData.length - 1; 
                 for (let R = 0; R <= lastRow; R++) {
+                    
+                    // 1. Tentukan warna untuk seluruh baris (R) berdasarkan Status di Kolom F
+                    let rowBgColor = null;
+                    let rowFontColor = null;
+                    
+                    if (R >= 3) {
+                        const statusCellAddr = XLSX.utils.encode_cell({ r: R, c: 5 });
+                        const statusCell = ws[statusCellAddr];
+                        if (statusCell && statusCell.v) {
+                            const statusVal = statusCell.v.toString().toLowerCase();
+                            if (statusVal === 'warning' || statusVal.includes('warning')) {
+                                rowBgColor = "FFEB9C";  // Oren
+                                rowFontColor = "9C5700";
+                            } else if (statusVal === 'danger' || statusVal.includes('danger')) {
+                                rowBgColor = "FFC7CE";  // Merah
+                                rowFontColor = "9C0006";
+                            } else if (statusVal === 'normal' || statusVal.includes('normal')) {
+                                rowBgColor = "C6EFCE";  // Hijau
+                                rowFontColor = "006100";
+                            }
+                        }
+                    }
+
+                    // 2. Loop untuk setiap kolum (A hingga F)
                     for (let C = 0; C <= 5; C++) {
                         const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
                         const cell = ws[cellAddress];
@@ -419,7 +438,7 @@
 
                         if (!cell.s) cell.s = {};
 
-                        // 1. BORDER HITAM
+                        // ★ A. BORDER HITAM UNTUK SEMUA SEL ★
                         cell.s.border = {
                             top: { style: "thin", color: { rgb: "000000" } },
                             bottom: { style: "thin", color: { rgb: "000000" } },
@@ -427,37 +446,25 @@
                             right: { style: "thin", color: { rgb: "000000" } }
                         };
 
-                        // 2. GAYA TITLE & HEADER
+                        // ★ B. GAYA TITLE & HEADER (Center) ★
                         if (R === 0 || R === 1) {
                             cell.s.font = { bold: true, sz: 14 };
                             cell.s.alignment = { horizontal: "center", vertical: "center" };
-                        } else if (R === 2) {
-                            cell.s.fill = { fgColor: { rgb: "4472C4" } }; // Biru
+                        } 
+                        else if (R === 2) {
+                            cell.s.fill = { fgColor: { rgb: "4472C4" } }; // Latar Belakang Biru
                             cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; 
                             cell.s.alignment = { horizontal: "center", vertical: "center" };
-                        } else if (R >= 3) {
-                            // ★ 3. ALIGN LEFT UNTUK SEMUA DATA ★
+                        } 
+                        // ★ C. GAYA DATA (Align Left & Warna Seluruh Baris) ★
+                        else if (R >= 3) {
+                            // 1. ALIGN LEFT UNTUK SEMUA DATA
                             cell.s.alignment = { horizontal: "left", vertical: "center" };
 
-                            // ★ 4. WARNAKAN BACKGROUND MENGIKUT STATUS (Kolom F / Index 5) ★
-                            if (C === 5) {
-                                let statusVal = cell.v.toString().toLowerCase();
-                                
-                                // WARNING = Oren
-                                if (statusVal === 'warning') {
-                                    cell.s.fill = { fgColor: { rgb: "FFEB9C" } }; 
-                                    cell.s.font = { color: { rgb: "9C5700" }, bold: true };
-                                } 
-                                // DANGER = Merah
-                                else if (statusVal === 'danger') {
-                                    cell.s.fill = { fgColor: { rgb: "FFC7CE" } }; 
-                                    cell.s.font = { color: { rgb: "9C0006" }, bold: true };
-                                } 
-                                // NORMAL = Hijau
-                                else if (statusVal === 'normal') {
-                                    cell.s.fill = { fgColor: { rgb: "C6EFCE" } }; 
-                                    cell.s.font = { color: { rgb: "006100" } };
-                                }
+                            // 2. WARNAKAN SELURUH BARIS (A hingga F)
+                            if (rowBgColor) {
+                                cell.s.fill = { fgColor: { rgb: rowBgColor } };
+                                cell.s.font = { color: { rgb: rowFontColor } };
                             }
                         }
                     }
