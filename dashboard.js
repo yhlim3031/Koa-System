@@ -469,7 +469,6 @@ function updateDashboard(data) {
 // ============================================
 // EXPORT TO EXCEL FUNCTION
 // ============================================
-
 function exportToExcel() {
     console.log('📊 Exporting to Excel...');
     
@@ -478,6 +477,7 @@ function exportToExcel() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     btn.disabled = true;
     
+    // Panggil fungsi anda untuk ambil data (getHistoryData)
     getHistoryData((data) => {
         if (!data || data.length === 0) {
             alert('⚠️ Tiada data untuk di export. Tunggu ESP32 hantar data.');
@@ -492,31 +492,15 @@ function exportToExcel() {
         const excelData = [];
         
         // ==========================================
-        // HEADER ROW 1: Title
-        // ==========================================
-        excelData.push(['LAPORAN DATA SISTEM MONITORING PENGGERA KEBAKARAN']);
-        
-        // ==========================================
-        // HEADER ROW 2: Tarikh & Masa sahaja
+        // HEADER ROWS
         // ==========================================
         const now = new Date();
-        const dateStr = now.toLocaleDateString('ms-MY', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-        const timeStr = now.toLocaleTimeString('ms-MY', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        });
-        excelData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
+        const dateStr = now.toLocaleDateString('ms-MY', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
         
-        // ==========================================
-        // HEADER ROW 3: Column Headers
-        // ==========================================
-        excelData.push(['Bil', 'Masa', 'Suhu (°C)', 'Kelembapan (%)', 'Gas (ADC)', 'Status']);
+        excelData.push(['LAPORAN DATA SISTEM MONITORING PENGGERA KEBAKARAN']); // Row 1
+        excelData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);             // Row 2
+        excelData.push(['Bil', 'Masa', 'Suhu (°C)', 'Kelembapan (%)', 'Gas (ADC)', 'Status']); // Row 3
         
         // ==========================================
         // DATA ROWS
@@ -524,10 +508,9 @@ function exportToExcel() {
         let bil = 1;
         data.forEach(row => {
             const status = getStatus(row.temperature, row.humidity, row.gas);
-            
             excelData.push([
                 bil++,
-                row.timestamp.split(' ')[1], // Time only
+                row.timestamp.split(' ')[1],
                 Number(row.temperature).toFixed(1),
                 Number(row.humidity).toFixed(1),
                 Math.round(row.gas),
@@ -536,13 +519,11 @@ function exportToExcel() {
         });
         
         // ==========================================
-        // CREATE WORKSHEET
+        // CREATE WORKSHEET & GAYAKAN EXCEL
         // ==========================================
         const ws = XLSX.utils.aoa_to_sheet(excelData);
         
-        // ==========================================
-        // SET COLUMN WIDTHS
-        // ==========================================
+        // Tetapkan Lebar Column
         ws['!cols'] = [
             { wch: 8 },   // Bil
             { wch: 15 },  // Masa
@@ -552,27 +533,58 @@ function exportToExcel() {
             { wch: 20 }   // Status
         ];
         
-        // ==========================================
-        // MERGE TITLE CELLS
-        // ==========================================
+        // Merge Title & Date (A1:F1, A2:F2)
         ws['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Title row (A1:F1)
-            { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }  // Date row (A2:F2)
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }
         ];
+
+        // ==========================================
+        // ★ PERINTAH PENTING: STYLE EXCEL ★
+        // ==========================================
+        const range = XLSX.utils.decode_range(ws['!ref']);
         
-        // ==========================================
-        // ADD TO WORKBOOK
-        // ==========================================
-        XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
-        
-        // ==========================================
-        // GENERATE FILE NAME
-        // ==========================================
-        const fileName = `Laporan_${dateStr.replace(/\//g, '-')}_${timeStr.replace(/:/g, '-')}.xlsx`;
+        for (let R = range.s.r; R <= range.e.r; R++) {
+            for (let C = range.s.c; C <= range.e.c; C++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                const cell = ws[cellAddress];
+                
+                if (cell) {
+                    if (!cell.s) cell.s = {};
+
+                    // 1. BORDER HITAM UNTUK SEMUA SEL
+                    cell.s.border = {
+                        top: { style: "thin", color: { rgb: "000000" } },
+                        bottom: { style: "thin", color: { rgb: "000000" } },
+                        left: { style: "thin", color: { rgb: "000000" } },
+                        right: { style: "thin", color: { rgb: "000000" } }
+                    };
+
+                    // 2. GAYA UNTUK BARIS HEADER (Row index 2)
+                    if (R === 2) {
+                        cell.s.fill = { fgColor: { rgb: "4472C4" } }; // Background Biru
+                        cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; // Putih & Bold
+                        cell.s.alignment = { horizontal: "center", vertical: "center" };
+                    } 
+                    // 3. GAYA UNTUK TITLE & DATE (Row index 0 dan 1)
+                    else if (R === 0 || R === 1) {
+                        cell.s.font = { bold: true, sz: 14 };
+                        cell.s.alignment = { horizontal: "center", vertical: "center" };
+                    }
+                    // 4. ★ DATA ALIGN LEFT (Row 3 dan seterusnya) ★
+                    else if (R >= 3) {
+                        cell.s.alignment = { horizontal: "left", vertical: "center" };
+                    }
+                }
+            }
+        }
         
         // ==========================================
         // SAVE FILE
         // ==========================================
+        XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
+        const fileName = `Laporan_${dateStr.replace(/\//g, '-')}_${timeStr.replace(/:/g, '-')}.xlsx`;
+        
         const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         const blob = new Blob([wbout], { type: 'application/octet-stream' });
         
@@ -590,7 +602,6 @@ function exportToExcel() {
         btn.disabled = false;
     });
 }
-
 // ============================================
 // GET STATUS HELPER
 // ============================================
