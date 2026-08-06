@@ -16,6 +16,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
+    <!-- ★ 5. IMPORT CONFIG DARI FAIL LUAR ★ -->
+    <script src="firebase-config.js"></script>
+
     <style>
         /* ==============================
            CSS (DASHBOARD & BUTTON)
@@ -209,13 +212,9 @@
 
     <footer class="footer">&copy; 2026 Sistem Monitoring Penggera Kebakaran.</footer>
 
-    <!-- ===== JAVASCRIPT (FULL) ===== -->
+    <!-- ===== JAVASCRIPT (FULL DASHBOARD LOGIC) ===== -->
     <script>
-        // ★ KONFIGURASI FIREBASE ★
-        // SILA TUKAR URL DI BAWAH DENGAN URL FIREBASE ANDA YANG SEBENAR
-        const firebaseConfig = {
-            databaseURL: "https://koasystem-4035d-default-rtdb.asia-southeast1.firebasedatabase.app"
-        };
+        // ★ INIT FIREBASE DI SINI (GUNAKAN CONFIG DARI FAIL LUAR) ★
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
