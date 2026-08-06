@@ -466,9 +466,9 @@ function updateDashboard(data) {
 
     updateCharts(temp, humid, gas, timestamp);
 }
-// ============================================
-// EXPORT TO EXCEL FUNCTION
-// ============================================
+/* ============================================
+   FUNGSI EXPORT EXCEL (BORDER PADA DATA SAHAJA)
+   ============================================ */
 function exportToExcel() {
     console.log('📊 Exporting to Excel...');
     
@@ -508,22 +508,28 @@ function exportToExcel() {
         let bil = 1;
         data.forEach(row => {
             const status = getStatus(row.temperature, row.humidity, row.gas);
+            
+            let statusText = status.text;
+            if (statusText.includes('Normal')) statusText = 'Normal';
+            else if (statusText.includes('Warning')) statusText = 'Warning';
+            else if (statusText.includes('Danger')) statusText = 'DANGER';
+
             excelData.push([
                 bil++,
                 row.timestamp.split(' ')[1],
                 Number(row.temperature).toFixed(1),
                 Number(row.humidity).toFixed(1),
                 Math.round(row.gas),
-                status.text
+                statusText 
             ]);
         });
         
         // ==========================================
-        // CREATE WORKSHEET & GAYAKAN EXCEL
+        // CREATE WORKSHEET
         // ==========================================
         const ws = XLSX.utils.aoa_to_sheet(excelData);
         
-        // Tetapkan Lebar Column
+        // Lebar Column
         ws['!cols'] = [
             { wch: 8 },   // Bil
             { wch: 15 },  // Masa
@@ -533,14 +539,14 @@ function exportToExcel() {
             { wch: 20 }   // Status
         ];
         
-        // Merge Title & Date (A1:F1, A2:F2)
+        // Merge Title & Date
         ws['!merges'] = [
             { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
             { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }
         ];
 
         // ==========================================
-        // ★ PERINTAH PENTING: STYLE EXCEL ★
+        // ★ GAYAKAN EXCEL (BORDER PADA DATA SAHAJA) ★
         // ==========================================
         const range = XLSX.utils.decode_range(ws['!ref']);
         
@@ -549,31 +555,50 @@ function exportToExcel() {
                 const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
                 const cell = ws[cellAddress];
                 
-                if (cell) {
-                    if (!cell.s) cell.s = {};
+                // ★ PENTING: Jika sel TIADA DATA, langkau terus! (Tak payah bagi border) ★
+                if (!cell) continue; 
 
-                    // 1. BORDER HITAM UNTUK SEMUA SEL
-                    cell.s.border = {
-                        top: { style: "thin", color: { rgb: "000000" } },
-                        bottom: { style: "thin", color: { rgb: "000000" } },
-                        left: { style: "thin", color: { rgb: "000000" } },
-                        right: { style: "thin", color: { rgb: "000000" } }
-                    };
+                if (!cell.s) cell.s = {};
 
-                    // 2. GAYA UNTUK BARIS HEADER (Row index 2)
-                    if (R === 2) {
-                        cell.s.fill = { fgColor: { rgb: "4472C4" } }; // Background Biru
-                        cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; // Putih & Bold
-                        cell.s.alignment = { horizontal: "center", vertical: "center" };
-                    } 
-                    // 3. GAYA UNTUK TITLE & DATE (Row index 0 dan 1)
-                    else if (R === 0 || R === 1) {
-                        cell.s.font = { bold: true, sz: 14 };
-                        cell.s.alignment = { horizontal: "center", vertical: "center" };
-                    }
-                    // 4. ★ DATA ALIGN LEFT (Row 3 dan seterusnya) ★
-                    else if (R >= 3) {
-                        cell.s.alignment = { horizontal: "left", vertical: "center" };
+                // 1. BORDER HITAM UNTUK SEL YANG ADA DATA SAHAJA
+                cell.s.border = {
+                    top: { style: "thin", color: { rgb: "000000" } },
+                    bottom: { style: "thin", color: { rgb: "000000" } },
+                    left: { style: "thin", color: { rgb: "000000" } },
+                    right: { style: "thin", color: { rgb: "000000" } }
+                };
+
+                // 2. GAYA TITLE (Row 0 & 1)
+                if (R === 0 || R === 1) {
+                    cell.s.font = { bold: true, sz: 14 };
+                    cell.s.alignment = { horizontal: "center", vertical: "center" };
+                } 
+                // 3. GAYA HEADER KOLUMN (Row 2)
+                else if (R === 2) {
+                    cell.s.fill = { fgColor: { rgb: "4472C4" } }; 
+                    cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; 
+                    cell.s.alignment = { horizontal: "center", vertical: "center" };
+                } 
+                // 4. GAYA DATA ROW (Row 3 ke bawah)
+                else if (R >= 3) {
+                    cell.s.alignment = { horizontal: "left", vertical: "center" };
+
+                    // ★ WARNAKAN BACKGROUND MENGIKUT STATUS (Kolom F / Index 5) ★
+                    if (C === 5) {
+                        let statusVal = cell.v.toString().toLowerCase();
+
+                        if (statusVal.includes('warning')) {
+                            cell.s.fill = { fgColor: { rgb: "FFEB9C" } }; // Oren
+                            cell.s.font = { color: { rgb: "9C5700" }, bold: true };
+                        } 
+                        else if (statusVal.includes('danger')) {
+                            cell.s.fill = { fgColor: { rgb: "FFC7CE" } }; // Merah
+                            cell.s.font = { color: { rgb: "9C0006" }, bold: true };
+                        } 
+                        else if (statusVal.includes('normal')) {
+                            cell.s.fill = { fgColor: { rgb: "C6EFCE" } }; // Hijau
+                            cell.s.font = { color: { rgb: "006100" } };
+                        }
                     }
                 }
             }
