@@ -4,19 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Monitoring Penggera Kebakaran</title>
-    
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- XLSX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-    <!-- Import config -->
     <script src="firebase-config.js"></script>
 
     <style>
@@ -41,7 +33,7 @@
         .header-actions { display: flex; align-items: center; gap: 1rem; }
         .btn-export {
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 0.6rem 1.2rem; 
+            width: auto !important; padding: 0.6rem 1.2rem; 
             background: linear-gradient(135deg, #1a7a3a, #28a745); color: white;
             border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
             cursor: pointer; transition: all 0.3s;
@@ -49,7 +41,6 @@
         .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); }
         .btn-export:active { transform: scale(0.95); }
         .btn-export i { font-size: 1.1rem; }
-
         .status-badge {
             display: flex; align-items: center; gap: 10px;
             background: #0a0e17; padding: 0.5rem 1.2rem;
@@ -59,10 +50,8 @@
         .status-dot.normal { background: #27ae60; box-shadow: 0 0 10px #27ae60; }
         .status-dot.warning { background: #f39c12; box-shadow: 0 0 10px #f39c12; }
         .status-dot.danger { background: #e74c3c; box-shadow: 0 0 10px #e74c3c; animation: pulse 1s infinite; }
-
         .header-sub { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #1a2a3a; font-size: 0.85rem; color: #8899aa; text-align: right; }
         .container { max-width: 1400px; margin: 0 auto; }
-
         .sensor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .sensor-card {
             background: linear-gradient(135deg, #141b2b, #1a2a3a); border: 1px solid #1a2a3a;
@@ -85,7 +74,6 @@
         .card-status.normal { color: #27ae60; }
         .card-status.warning { color: #f39c12; }
         .card-status.danger { color: #e74c3c; }
-
         .charts-section { background: linear-gradient(135deg, #141b2b, #1a2a3a); border: 1px solid #1a2a3a; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
         .charts-section h2 { font-size: 1.4rem; color: #e0e0e0; margin-bottom: 0.3rem; }
         .charts-section h2 i { color: #4ecdc4; margin-right: 10px; }
@@ -95,6 +83,7 @@
         .chart-box h3 { font-size: 0.9rem; color: #8899aa; font-weight: 400; margin-bottom: 0.8rem; text-align: center; }
         .chart-container { position: relative; height: 200px; width: 100%; }
 
+        /* ★ LEGEND BOX & CLASSES ★ */
         .legend-box {
             display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
             padding: 8px 12px; margin-top: 10px; background: #0a0e17;
@@ -107,19 +96,29 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s;
         }
+        /* ★ AKTIFKAN CLASS UNTUK WARNING & DANGER ★ */
+        .legend-item.active-warning {
+            color: #f39c12 !important;
+            border-color: #f39c12 !important;
+            background: rgba(243, 156, 18, 0.2) !important;
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.3) !important;
+            animation: pulse 1.5s infinite !important;
+        }
+        .legend-item.active-danger {
+            color: #e74c3c !important;
+            border-color: #e74c3c !important;
+            background: rgba(231, 76, 60, 0.2) !important;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.3) !important;
+            animation: pulse 1s infinite !important;
+        }
 
         .footer { text-align: center; padding: 1.5rem 0; color: #556677; font-size: 0.85rem; border-top: 1px solid #1a2a3a; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-        @media (max-width: 768px) {
-            body { padding: 10px; } .header { padding: 1rem; } .header-content h1 { font-size: 1.2rem; }
-            .sensor-grid { grid-template-columns: 1fr; } .charts-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 768px) { body { padding: 10px; } .header { padding: 1rem; } .header-content h1 { font-size: 1.2rem; } .sensor-grid { grid-template-columns: 1fr; } .charts-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-content">
             <i class="fas fa-fire-extinguisher header-icon"></i>
@@ -139,7 +138,6 @@
         </div>
     </header>
 
-    <!-- ===== DASHBOARD CARDS ===== -->
     <div class="container">
         <div class="sensor-grid">
             <div class="sensor-card card-temp">
@@ -168,11 +166,9 @@
             </div>
         </div>
 
-        <!-- ===== CHARTS & LEGEND ===== -->
         <div class="charts-section">
             <h2><i class="fas fa-chart-line"></i> Realtime Data Graph</h2>
             <div class="chart-sub">Update setiap 5 saat</div>
-            
             <div class="charts-grid">
                 <!-- Temperature -->
                 <div class="chart-box">
@@ -206,14 +202,13 @@
 
     <footer class="footer">&copy; 2026 Sistem Monitoring Penggera Kebakaran.</footer>
 
-    <!-- ===== JAVASCRIPT ===== -->
     <script>
-        // Init Firebase
+        // ★ INIT FIREBASE ★
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
         // ============================================
-        // 1. CHART SETUP (SAMA)
+        // 1. CHART SETUP
         // ============================================
         let tempChart, humidChart, gasChart;
         const MAX_POINTS = 20;
@@ -275,11 +270,11 @@
         }
 
         // ============================================
-        // 2. STATUS FUNCTIONS (DIPERBAIKI)
+        // 2. STATUS FUNCTIONS
         // ============================================
         function getTemperatureStatus(temp) {
             if (temp >= 45) return { text: '🚨 DANGER', class: 'danger' };
-            if (temp >= 37 && temp <= 44) return { text: '⚠️ WARNING', class: 'warning' };  // 37-44 WARNING
+            if (temp >= 37) return { text: '⚠️ WARNING', class: 'warning' };
             return { text: '✅ Normal', class: 'normal' };
         }
         function getHumidityStatus(humid) {
@@ -293,7 +288,7 @@
         }
 
         // ============================================
-        // 3. UPDATE DASHBOARD (DENGAN DEBUG & LOGIK LEGEND YANG JELAS)
+        // 3. UPDATE DASHBOARD (with classList toggle)
         // ============================================
         function updateDashboard(data) {
             if (!data) return;
@@ -301,12 +296,9 @@
             const humid = data.humidity || 0;
             const gas = data.gas || 0;
 
-            console.log(`🔍 DEBUG: temp=${temp}, humid=${humid}, gas=${gas}`);
-
-            // ---- Update cards ----
+            // Update cards
             document.getElementById('tempValue').textContent = temp;
             const tStat = getTemperatureStatus(temp);
-            console.log(`   tStat:`, tStat);
             const tEl = document.getElementById('tempStatus');
             tEl.textContent = tStat.text; tEl.className = 'card-status ' + tStat.class;
 
@@ -320,7 +312,7 @@
             const gEl = document.getElementById('gasStatus');
             gEl.textContent = gStat.text; gEl.className = 'card-status ' + gStat.class;
 
-            // ---- System status ----
+            // System status
             let sysClass = 'normal', sysText = '✅ Sistem Normal';
             if (tStat.class === 'danger' || gStat.class === 'danger') { sysClass = 'danger'; sysText = '🚨 DANGER!'; }
             else if (tStat.class === 'warning' || gStat.class === 'warning' || hStat.class === 'warning') { sysClass = 'warning'; sysText = '⚠️ WARNING'; }
@@ -328,80 +320,49 @@
             document.getElementById('statusText').textContent = sysText;
 
             // ============================================
-            // ★ UPDATE LEGEND BOXES (DENGAN LOGIK JELAS) ★
+            // ★ UPDATE LEGEND BOXES USING classList ★
             // ============================================
-            const resetStyle = (el) => {
-                if (!el) return;
-                el.style.color = '#8899aa';
-                el.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-                el.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
-                el.style.boxShadow = 'none';
-                el.style.animation = 'none';
-            };
-            const setWarningStyle = (el) => {
-                if (!el) return;
-                el.style.color = '#f39c12';
-                el.style.borderColor = '#f39c12';
-                el.style.backgroundColor = 'rgba(243, 156, 18, 0.15)';
-                el.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.2)';
-                el.style.animation = 'pulse 1.5s infinite';
-            };
-            const setDangerStyle = (el) => {
-                if (!el) return;
-                el.style.color = '#e74c3c';
-                el.style.borderColor = '#e74c3c';
-                el.style.backgroundColor = 'rgba(231, 76, 60, 0.15)';
-                el.style.boxShadow = '0 0 15px rgba(231, 76, 60, 0.2)';
-                el.style.animation = 'pulse 1s infinite';
-            };
-
-            // 1. TEMPERATURE LEGEND
+            // 1. Temperature
             const tempWarn = document.getElementById('tempWarnLabel');
             const tempDanger = document.getElementById('tempDangerLabel');
-            console.log(`   tempWarn element:`, tempWarn);
-            console.log(`   tempDanger element:`, tempDanger);
-
-            resetStyle(tempWarn);
-            resetStyle(tempDanger);
+            
+            // Remove all active classes first
+            if (tempWarn) { tempWarn.classList.remove('active-warning', 'active-danger'); }
+            if (tempDanger) { tempDanger.classList.remove('active-warning', 'active-danger'); }
 
             if (tStat.class === 'danger') {
-                console.log(`   🔴 Setting DANGER style for temp (≥45)`);
-                setDangerStyle(tempDanger);
+                if (tempDanger) tempDanger.classList.add('active-danger');
             } else if (tStat.class === 'warning') {
-                console.log(`   🟠 Setting WARNING style for temp (37-44)`);
-                setWarningStyle(tempWarn);
-            } else {
-                console.log(`   ⚪ Temp status NORMAL`);
+                if (tempWarn) tempWarn.classList.add('active-warning');
             }
 
-            // 2. HUMIDITY LEGEND
+            // 2. Humidity
             const humidWarn = document.getElementById('humidWarnLabel');
-            resetStyle(humidWarn);
-            if (hStat.class === 'warning') {
-                console.log(`   💧 Setting WARNING style for humidity`);
-                setWarningStyle(humidWarn);
+            if (humidWarn) {
+                humidWarn.classList.remove('active-warning', 'active-danger');
+                if (hStat.class === 'warning') {
+                    humidWarn.classList.add('active-warning');
+                }
             }
 
-            // 3. GAS LEGEND
+            // 3. Gas
             const gasWarn = document.getElementById('gasWarnLabel');
             const gasDanger = document.getElementById('gasDangerLabel');
-            resetStyle(gasWarn);
-            resetStyle(gasDanger);
+            if (gasWarn) { gasWarn.classList.remove('active-warning', 'active-danger'); }
+            if (gasDanger) { gasDanger.classList.remove('active-warning', 'active-danger'); }
+
             if (gStat.class === 'danger') {
-                console.log(`   💨 Setting DANGER style for gas`);
-                setDangerStyle(gasDanger);
+                if (gasDanger) gasDanger.classList.add('active-danger');
             } else if (gStat.class === 'warning') {
-                console.log(`   💨 Setting WARNING style for gas`);
-                setWarningStyle(gasWarn);
+                if (gasWarn) gasWarn.classList.add('active-warning');
             }
 
-            // ---- Last update ----
             document.getElementById('lastUpdate').textContent = 'Last Update: ' + new Date().toLocaleString('ms-MY', { hour12: false });
             updateCharts(temp, humid, gas);
         }
 
         // ============================================
-        // 4. EXPORT EXCEL (SAMA)
+        // 4. EXPORT EXCEL (Sama seperti sebelumnya)
         // ============================================
         function exportToExcel() {
             const btn = document.querySelector('.btn-export');
@@ -470,12 +431,22 @@
                         if (!cell) continue;
                         if (!cell.s) cell.s = {};
                         cell.s.border = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
-                        if (R === 0 || R === 1) { cell.s.font = { bold: true, sz: 14 }; cell.s.alignment = { horizontal: "center", vertical: "center" }; }
-                        else if (R === 2) { cell.s.fill = { fgColor: { rgb: "4472C4" } }; cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; cell.s.alignment = { horizontal: "center", vertical: "center" }; }
-                        else if (R >= 3) { cell.s.alignment = { horizontal: "left", vertical: "center" }; if (rowBg) { cell.s.fill = { fgColor: { rgb: rowBg } }; cell.s.font = { color: { rgb: rowFont }, bold: true }; } }
+                        if (R === 0 || R === 1) {
+                            cell.s.font = { bold: true, sz: 14 };
+                            cell.s.alignment = { horizontal: "center", vertical: "center" };
+                        } else if (R === 2) {
+                            cell.s.fill = { fgColor: { rgb: "4472C4" } };
+                            cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; 
+                            cell.s.alignment = { horizontal: "center", vertical: "center" };
+                        } else if (R >= 3) {
+                            cell.s.alignment = { horizontal: "left", vertical: "center" };
+                            if (rowBg) {
+                                cell.s.fill = { fgColor: { rgb: rowBg } };
+                                cell.s.font = { color: { rgb: rowFont }, bold: true };
+                            }
+                        }
                     }
                 }
-                
                 XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
                 XLSX.writeFile(wb, `Laporan_${dateStr.replace(/\//g, '-')}.xlsx`);
                 btn.innerHTML = originalText;
@@ -483,18 +454,15 @@
             });
         }
 
-        // ============================================
-        // 5. AMBIL HISTORY
-        // ============================================
         function getAllHistoryData(callback) {
             const historyRef = database.ref('sensor_data/history');
             historyRef.once('value').then((snapshot) => {
                 const val = snapshot.val();
                 if (!val) { callback([]); return; }
                 const allData = [];
-                const dates = Object.keys(val).sort();
+                const dates = Object.keys(val).sort(); 
                 dates.forEach(date => {
-                    const times = Object.keys(val[date]).sort();
+                    const times = Object.keys(val[date]).sort(); 
                     times.forEach(time => {
                         const record = val[date][time];
                         if (record) {
@@ -507,7 +475,6 @@
                         }
                     });
                 });
-                console.log(`📊 Export: Found ${allData.length} history records`);
                 callback(allData);
             }).catch((error) => {
                 console.error("❌ Error reading history:", error);
@@ -516,7 +483,7 @@
         }
 
         // ============================================
-        // 6. LISTEN LATEST
+        // 5. LISTEN TO LATEST DATA
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
