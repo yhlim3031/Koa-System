@@ -288,7 +288,7 @@
         // ============================================
         function getTemperatureStatus(temp) {
             if (temp >= 45) return { text: '🚨 DANGER', class: 'danger' };
-            if (temp >= 37) return { text: '⚠️ WARNING', class: 'warning' };  // 37-44 SEMUA WARNING
+            if (temp >= 37) return { text: '⚠️ WARNING', class: 'warning' };  // 37-44 WARNING
             return { text: '✅ Normal', class: 'normal' };
         }
         function getHumidityStatus(humid) {
@@ -316,8 +316,12 @@
             const humid = data.humidity || 0;
             const gas = data.gas || 0;
 
+            // ===== DEBUG LOG =====
+            console.log(`🔍 DEBUG: temp=${temp}, humid=${humid}, gas=${gas}`);
+
             document.getElementById('tempValue').textContent = temp;
             const tStat = getTemperatureStatus(temp);
+            console.log(`   tStat:`, tStat);
             const tEl = document.getElementById('tempStatus');
             tEl.textContent = tStat.text; tEl.className = 'card-status ' + tStat.class;
 
@@ -339,7 +343,7 @@
             document.getElementById('statusText').textContent = sysText;
 
             // ============================================
-            // ★ UPDATE LEGEND BOXES (GUNAKAN ID) ★
+            // ★ UPDATE LEGEND BOXES (DENGAN DEBUG) ★
             // ============================================
 
             // Helper untuk reset style
@@ -372,37 +376,46 @@
                 el.style.animation = 'pulse 1s infinite';
             };
 
-            // 1. TEMPERATURE LEGEND (GUNAKAN ID)
+            // 1. TEMPERATURE LEGEND
             const tempWarnLabel = document.getElementById('tempWarnLabel');
             const tempDangerLabel = document.getElementById('tempDangerLabel');
+            
+            console.log(`   tempWarnLabel:`, tempWarnLabel);
+            console.log(`   tempDangerLabel:`, tempDangerLabel);
 
-            resetStyle(tempWarnLabel);
-            resetStyle(tempDangerLabel);
+            if (tempWarnLabel) resetStyle(tempWarnLabel);
+            if (tempDangerLabel) resetStyle(tempDangerLabel);
 
             if (tStat.class === 'danger') {
-                setDangerStyle(tempDangerLabel);
+                console.log(`   🔴 Setting DANGER style for temp`);
+                if (tempDangerLabel) setDangerStyle(tempDangerLabel);
             } else if (tStat.class === 'warning') {
-                setWarningStyle(tempWarnLabel);  // ✅ 37-44 SEMUA AKAN MENYALA!
+                console.log(`   🟠 Setting WARNING style for temp`);
+                if (tempWarnLabel) setWarningStyle(tempWarnLabel);
+            } else {
+                console.log(`   ⚪ Temp status NORMAL, no highlight`);
             }
 
-            // 2. HUMIDITY LEGEND (GUNAKAN ID)
+            // 2. HUMIDITY LEGEND
             const humidWarnLabel = document.getElementById('humidWarnLabel');
-            resetStyle(humidWarnLabel);
+            if (humidWarnLabel) resetStyle(humidWarnLabel);
             if (hStat.class === 'warning') {
-                setWarningStyle(humidWarnLabel);
+                console.log(`   💧 Setting WARNING style for humidity`);
+                if (humidWarnLabel) setWarningStyle(humidWarnLabel);
             }
 
-            // 3. GAS LEGEND (GUNAKAN ID)
+            // 3. GAS LEGEND
             const gasWarnLabel = document.getElementById('gasWarnLabel');
             const gasDangerLabel = document.getElementById('gasDangerLabel');
-
-            resetStyle(gasWarnLabel);
-            resetStyle(gasDangerLabel);
+            if (gasWarnLabel) resetStyle(gasWarnLabel);
+            if (gasDangerLabel) resetStyle(gasDangerLabel);
 
             if (gStat.class === 'danger') {
-                setDangerStyle(gasDangerLabel);
+                console.log(`   💨 Setting DANGER style for gas`);
+                if (gasDangerLabel) setDangerStyle(gasDangerLabel);
             } else if (gStat.class === 'warning') {
-                setWarningStyle(gasWarnLabel);
+                console.log(`   💨 Setting WARNING style for gas`);
+                if (gasWarnLabel) setWarningStyle(gasWarnLabel);
             }
 
             document.getElementById('lastUpdate').textContent = 'Last Update: ' + new Date().toLocaleString('ms-MY', { hour12: false });
