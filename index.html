@@ -103,7 +103,7 @@
         .chart-box h3 { font-size: 0.9rem; color: #8899aa; font-weight: 400; margin-bottom: 0.8rem; text-align: center; }
         .chart-container { position: relative; height: 200px; width: 100%; }
 
-        /* Legend Boxes (CSS Asas) */
+        /* Legend Boxes */
         .legend-box {
             display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
             padding: 8px 12px; margin-top: 10px; background: #0a0e17;
@@ -116,7 +116,6 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s;
         }
-        /* NOTA: active-warning dan active-danger TELAH DIBUANG KERANA KITA GUNA INLINE STYLE! */
 
         .footer { text-align: center; padding: 1.5rem 0; color: #556677; font-size: 0.85rem; border-top: 1px solid #1a2a3a; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -189,9 +188,8 @@
                     <h3><i class="fas fa-thermometer-half" style="color:#ff6b6b;"></i> Temperature</h3>
                     <div class="chart-container"><canvas id="tempChart"></canvas></div>
                     <div class="legend-box" id="tempLegend">
-                        <!-- KITA AKAN UBAH STYLE TERUS GUNA JS -->
-                        <span id="tempWarning" class="legend-item">🟠 WARNING 37°C</span>
-                        <span id="tempDanger" class="legend-item">🔴 DANGER 45°C</span>
+                        <span class="legend-item">🟠 WARNING 37°C</span>
+                        <span class="legend-item">🔴 DANGER 45°C</span>
                     </div>
                 </div>
                 <!-- Humidity -->
@@ -199,7 +197,7 @@
                     <h3><i class="fas fa-tint" style="color:#4ecdc4;"></i> Humidity</h3>
                     <div class="chart-container"><canvas id="humidChart"></canvas></div>
                     <div class="legend-box" id="humidLegend">
-                        <span id="humidWarning" class="legend-item">🟠 WARNING 70%</span>
+                        <span class="legend-item">🟠 WARNING 70%</span>
                     </div>
                 </div>
                 <!-- Gas -->
@@ -207,8 +205,8 @@
                     <h3><i class="fas fa-fire" style="color:#f39c12;"></i> Gas MQ2</h3>
                     <div class="chart-container"><canvas id="gasChart"></canvas></div>
                     <div class="legend-box" id="gasLegend">
-                        <span id="gasWarning" class="legend-item">🟠 WARNING 301</span>
-                        <span id="gasDanger" class="legend-item">🔴 DANGER 701</span>
+                        <span class="legend-item">🟠 WARNING 301</span>
+                        <span class="legend-item">🔴 DANGER 701</span>
                     </div>
                 </div>
             </div>
@@ -340,13 +338,10 @@
             document.getElementById('statusDot').className = 'status-dot ' + sysClass;
             document.getElementById('statusText').textContent = sysText;
 
-            // ★ DEBUG: Lihat di Console (F12) untuk pastikan suhu 41-44 dibaca!
-            console.log(`📊 Suhu: ${temp}°C | Status: ${tStat.class}`);
+            // ============================================
+            // ★ UPDATE LEGEND BOXES (GUNAKAN DOM PARENT-CHILDREN - 100% TAHAN GAGAL) ★
+            // ============================================
 
-            // ============================================
-            // ★ UPDATE LEGEND BOXES (GUNA INLINE STYLE - 100% TAHAN GAGAL) ★
-            // ============================================
-            
             // Helper untuk reset style Normal (Kelabu)
             const resetStyle = (el) => {
                 if (!el) return;
@@ -377,35 +372,46 @@
                 el.style.animation = 'pulse 1s infinite';
             };
 
-            // 1. TEMPERATURE LEGEND
-            const tempWarn = document.getElementById('tempWarning');
-            const tempDanger = document.getElementById('tempDanger');
-            resetStyle(tempWarn);
-            resetStyle(tempDanger);
-            
-            if (tStat.class === 'danger') {
-                setDangerStyle(tempDanger);
-            } else if (tStat.class === 'warning') {
-                setWarningStyle(tempWarn);
+            // 1. TEMPERATURE LEGEND (Akses melalui parent id="tempLegend")
+            const tempLegend = document.getElementById('tempLegend');
+            if (tempLegend) {
+                const tempWarn = tempLegend.children[0];
+                const tempDanger = tempLegend.children[1];
+
+                resetStyle(tempWarn);
+                resetStyle(tempDanger);
+                
+                if (tStat.class === 'danger') {
+                    setDangerStyle(tempDanger);
+                } else if (tStat.class === 'warning') {
+                    setWarningStyle(tempWarn);
+                }
             }
 
-            // 2. HUMIDITY LEGEND
-            const humidWarn = document.getElementById('humidWarning');
-            resetStyle(humidWarn);
-            if (hStat.class === 'warning') {
-                setWarningStyle(humidWarn);
+            // 2. HUMIDITY LEGEND (Akses melalui parent id="humidLegend")
+            const humidLegend = document.getElementById('humidLegend');
+            if (humidLegend) {
+                const humidWarn = humidLegend.children[0];
+                resetStyle(humidWarn);
+                if (hStat.class === 'warning') {
+                    setWarningStyle(humidWarn);
+                }
             }
 
-            // 3. GAS LEGEND
-            const gasWarn = document.getElementById('gasWarning');
-            const gasDanger = document.getElementById('gasDanger');
-            resetStyle(gasWarn);
-            resetStyle(gasDanger);
-            
-            if (gStat.class === 'danger') {
-                setDangerStyle(gasDanger);
-            } else if (gStat.class === 'warning') {
-                setWarningStyle(gasWarn);
+            // 3. GAS LEGEND (Akses melalui parent id="gasLegend")
+            const gasLegend = document.getElementById('gasLegend');
+            if (gasLegend) {
+                const gasWarn = gasLegend.children[0];
+                const gasDanger = gasLegend.children[1];
+
+                resetStyle(gasWarn);
+                resetStyle(gasDanger);
+                
+                if (gStat.class === 'danger') {
+                    setDangerStyle(gasDanger);
+                } else if (gStat.class === 'warning') {
+                    setWarningStyle(gasWarn);
+                }
             }
 
             document.getElementById('lastUpdate').textContent = 'Last Update: ' + new Date().toLocaleString('ms-MY', { hour12: false });
