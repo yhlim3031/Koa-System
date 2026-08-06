@@ -351,8 +351,8 @@
             updateCharts(temp, humid, gas);
         }
 
-        // ============================================
-        // 4. ★ EXPORT EXCEL (AMBIL SEMUA HISTORY) ★
+               // ============================================
+        // 4. ★ EXPORT EXCEL (ALIGN LEFT, BORDER HITAM, WARNA) ★
         // ============================================
         function exportToExcel() {
             const btn = document.querySelector('.btn-export');
@@ -385,7 +385,13 @@
                     const humid = Number(row.humidity) || 0;
                     const gas = Number(row.gas) || 0;
                     
-                    const statusText = determineStatus(temp, humid, gas);
+                    // ★ TUKAR LOGIK INI: Kita guna teks penuh untuk align dengan warna CSS ★
+                    let statusText = 'NORMAL';
+                    if (temp >= 45 || gas > 700) {
+                        statusText = 'DANGER';
+                    } else if (temp >= 37 || humid >= 70 || gas >= 301) {
+                        statusText = 'WARNING';
+                    }
 
                     excelData.push([
                         bil++,
@@ -393,7 +399,7 @@
                         temp.toFixed(1),
                         humid.toFixed(1),
                         Math.round(gas),
-                        statusText 
+                        statusText // Hantar 'DANGER', 'WARNING', atau 'NORMAL'
                     ]);
                 });
                 
@@ -401,7 +407,9 @@
                 ws['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 14 }, { wch: 20 }];
                 ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }];
 
-                // ★ GAYAKAN EXCEL ★
+                // ==========================================
+                // ★ LOGIK CSS EXCEL (WARNA & BORDER) ★
+                // ==========================================
                 const lastRow = excelData.length - 1; 
                 for (let R = 0; R <= lastRow; R++) {
                     for (let C = 0; C <= 5; C++) {
@@ -411,6 +419,7 @@
 
                         if (!cell.s) cell.s = {};
 
+                        // 1. BORDER HITAM
                         cell.s.border = {
                             top: { style: "thin", color: { rgb: "000000" } },
                             bottom: { style: "thin", color: { rgb: "000000" } },
@@ -418,25 +427,35 @@
                             right: { style: "thin", color: { rgb: "000000" } }
                         };
 
+                        // 2. GAYA TITLE & HEADER
                         if (R === 0 || R === 1) {
                             cell.s.font = { bold: true, sz: 14 };
                             cell.s.alignment = { horizontal: "center", vertical: "center" };
                         } else if (R === 2) {
-                            cell.s.fill = { fgColor: { rgb: "4472C4" } }; 
+                            cell.s.fill = { fgColor: { rgb: "4472C4" } }; // Biru
                             cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }; 
                             cell.s.alignment = { horizontal: "center", vertical: "center" };
                         } else if (R >= 3) {
+                            // ★ 3. ALIGN LEFT UNTUK SEMUA DATA ★
                             cell.s.alignment = { horizontal: "left", vertical: "center" };
+
+                            // ★ 4. WARNAKAN BACKGROUND MENGIKUT STATUS (Kolom F / Index 5) ★
                             if (C === 5) {
                                 let statusVal = cell.v.toString().toLowerCase();
-                                if (statusVal.includes('warning')) {
-                                    cell.s.fill = { fgColor: { rgb: "FFEB9C" } }; // Oren
+                                
+                                // WARNING = Oren
+                                if (statusVal === 'warning') {
+                                    cell.s.fill = { fgColor: { rgb: "FFEB9C" } }; 
                                     cell.s.font = { color: { rgb: "9C5700" }, bold: true };
-                                } else if (statusVal.includes('danger')) {
-                                    cell.s.fill = { fgColor: { rgb: "FFC7CE" } }; // Merah
+                                } 
+                                // DANGER = Merah
+                                else if (statusVal === 'danger') {
+                                    cell.s.fill = { fgColor: { rgb: "FFC7CE" } }; 
                                     cell.s.font = { color: { rgb: "9C0006" }, bold: true };
-                                } else if (statusVal.includes('normal')) {
-                                    cell.s.fill = { fgColor: { rgb: "C6EFCE" } }; // Hijau
+                                } 
+                                // NORMAL = Hijau
+                                else if (statusVal === 'normal') {
+                                    cell.s.fill = { fgColor: { rgb: "C6EFCE" } }; 
                                     cell.s.font = { color: { rgb: "006100" } };
                                 }
                             }
@@ -450,7 +469,6 @@
                 btn.disabled = false;
             });
         }
-
         // ============================================
         // 5. ★ AMBIL SEMUA HISTORY UNTUK EXCEL ★
         // ============================================
