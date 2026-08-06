@@ -305,7 +305,7 @@
         }
 
         // ============================================
-        // 3. UPDATE DASHBOARD (LIVE DATA)
+        // 3. UPDATE DASHBOARD (AMBIL DARI LATEST)
         // ============================================
         function updateDashboard(data) {
             if (!data) return;
@@ -485,25 +485,18 @@
         }
 
         // ============================================
-        // 6. ★ AMBIL DATA TERKINI (LATEST) UNTUK PAPARAN ★
+        // 6. ★ AMBIL DATA TERKINI DARI 'latest' (BUKAN history) ★
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
-            console.log("🔄 Menunggu data terkini dari Firebase...");
+            console.log("🔄 Menunggu data terkini dari Firebase (node 'latest')...");
             
-            // Dengar node history, ambil 1 data terakhir sahaja
-            const latestRef = database.ref('sensor_data/history').limitToLast(1);
+            // Dengar terus pada 'sensor_data/latest'
+            const latestRef = database.ref('sensor_data/latest');
             latestRef.on('value', (snapshot) => {
-                const val = snapshot.val();
-                if (!val) return;
-
-                const dates = Object.keys(val);
-                const latestDate = dates[0];
-                const times = Object.keys(val[latestDate]);
-                const latestTime = times[0];
-                const latestData = val[latestDate][latestTime];
-
+                const latestData = snapshot.val();
                 if (latestData) {
+                    console.log("📥 Data 'latest' diterima:", latestData);
                     updateDashboard(latestData);
                 }
             });
