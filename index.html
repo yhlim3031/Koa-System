@@ -337,7 +337,7 @@
 
             // Update Legend
             const tempL = document.getElementById('tempLegend');
-            tempL.innerHTML = (temp >= 37 && temp <= 40 ? `<span class="legend-item active-warning">🟠 WARNING 37°C (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 37°C</span>`) +
+            tempL.innerHTML = (temp >= 37 && temp <= 44 ? `<span class="legend-item active-warning">🟠 WARNING 37°C (⚠️ AKTIF)</span>` : `<span class="legend-item">🟠 WARNING 37°C</span>`) +
                               (temp >= 45 ? `<span class="legend-item active-danger">🔴 DANGER 45°C (🚨 AKTIF)</span>` : `<span class="legend-item">🔴 DANGER 45°C</span>`);
 
             const humidL = document.getElementById('humidLegend');
