@@ -466,7 +466,152 @@ function updateDashboard(data) {
 
     updateCharts(temp, humid, gas, timestamp);
 }
+// ============================================
+// EXPORT TO EXCEL FUNCTION
+// ============================================
 
+function exportToExcel() {
+    console.log('📊 Exporting to Excel...');
+    
+    const btn = document.querySelector('.btn-export');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    btn.disabled = true;
+    
+    getHistoryData((data) => {
+        if (!data || data.length === 0) {
+            alert('⚠️ Tiada data untuk di export. Tunggu ESP32 hantar data.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+        }
+        
+        console.log(`📊 Found ${data.length} data points`);
+        
+        const wb = XLSX.utils.book_new();
+        const excelData = [];
+        
+        // ==========================================
+        // HEADER ROW 1: Title
+        // ==========================================
+        excelData.push(['LAPORAN DATA SISTEM MONITORING PENGGERA KEBAKARAN']);
+        
+        // ==========================================
+        // HEADER ROW 2: Tarikh & Masa sahaja
+        // ==========================================
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('ms-MY', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+        const timeStr = now.toLocaleTimeString('ms-MY', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        excelData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
+        
+        // ==========================================
+        // HEADER ROW 3: Column Headers
+        // ==========================================
+        excelData.push(['Bil', 'Masa', 'Suhu (°C)', 'Kelembapan (%)', 'Gas (ADC)', 'Status']);
+        
+        // ==========================================
+        // DATA ROWS
+        // ==========================================
+        let bil = 1;
+        data.forEach(row => {
+            const status = getStatus(row.temperature, row.humidity, row.gas);
+            
+            excelData.push([
+                bil++,
+                row.timestamp.split(' ')[1], // Time only
+                Number(row.temperature).toFixed(1),
+                Number(row.humidity).toFixed(1),
+                Math.round(row.gas),
+                status.text
+            ]);
+        });
+        
+        // ==========================================
+        // CREATE WORKSHEET
+        // ==========================================
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        
+        // ==========================================
+        // SET COLUMN WIDTHS
+        // ==========================================
+        ws['!cols'] = [
+            { wch: 8 },   // Bil
+            { wch: 15 },  // Masa
+            { wch: 15 },  // Suhu
+            { wch: 18 },  // Kelembapan
+            { wch: 14 },  // Gas
+            { wch: 20 }   // Status
+        ];
+        
+        // ==========================================
+        // MERGE TITLE CELLS
+        // ==========================================
+        ws['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Title row (A1:F1)
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }  // Date row (A2:F2)
+        ];
+        
+        // ==========================================
+        // ADD TO WORKBOOK
+        // ==========================================
+        XLSX.utils.book_append_sheet(wb, ws, 'Laporan');
+        
+        // ==========================================
+        // GENERATE FILE NAME
+        // ==========================================
+        const fileName = `Laporan_${dateStr.replace(/\//g, '-')}_${timeStr.replace(/:/g, '-')}.xlsx`;
+        
+        // ==========================================
+        // SAVE FILE
+        // ==========================================
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        
+        console.log('✅ Excel downloaded:', fileName);
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+// ============================================
+// GET STATUS HELPER
+// ============================================
+
+function getStatus(temp, humid, gas) {
+    const tempStatus = getTemperatureStatus(temp);
+    const humidStatus = getHumidityStatus(humid);
+    const gasStatus = getGasStatus(gas);
+    
+    if (tempStatus.class === 'danger' || gasStatus.class === 'danger') {
+        return { text: '🚨 DANGER', class: 'danger' };
+    }
+    
+    if (tempStatus.class === 'warning' || 
+        gasStatus.class === 'warning' || 
+        humidStatus.class === 'warning') {
+        return { text: '⚠️ Warning', class: 'warning' };
+    }
+    
+    return { text: '✅ Normal', class: 'normal' };
+}
 // ============================================
 // LISTEN TO FIREBASE
 // ============================================

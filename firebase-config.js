@@ -20,84 +20,136 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 const database = firebase.database();
-
-// ============================================
-// DEBUG: CHECK DATABASE PATH
-// ============================================
-
-// TEST 1: Check entire sensor_data
-const sensorDataRef = database.ref('sensor_data');
-
-sensorDataRef.on('value', (snapshot) => {
-    const data = snapshot.val();
-    console.log('🔍 FULL sensor_data:', data);
-}, (error) => {
-    console.error('❌ Error reading sensor_data:', error);
-});
-
-// TEST 2: Check latest data
 const sensorRef = database.ref('sensor_data/latest');
-
-sensorRef.on('value', (snapshot) => {
-    const data = snapshot.val();
-    console.log('🔍 LATEST data:', data);
-    
-    if (data) {
-        console.log('✅ Data found!');
-        console.log('   Temperature:', data.temperature);
-        console.log('   Humidity:', data.humidity);
-        console.log('   Gas:', data.gas);
-        console.log('   Timestamp:', data.timestamp);
-    } else {
-        console.warn('⚠️ No data at sensor_data/latest');
-    }
-}, (error) => {
-    console.error('❌ Error reading latest:', error);
-});
-
-// ============================================
-// THRESHOLD VALUES
-// ============================================
-
-const THRESHOLDS = {
-    temperature: {
-        normal: { min: 0, max: 35 },
-        warning: { min: 37, max: 40 },
-        danger: { min: 45, max: Infinity }
-    },
-    humidity: {
-        normal: { min: 30, max: 70 },
-        warning: { min: 0, max: 30 },
-        warningHigh: { min: 70, max: Infinity }
-    },
-    gas: {
-        safe: { min: 0, max: 300 },
-        warning: { min: 301, max: 700 },
-        danger: { min: 701, max: Infinity }
-    }
-};
+const historyRef = database.ref('sensor_data/history');
 
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
 
-// CARA BARU: Website buat timestamp sendiri
-function getCurrentTimestamp() {
-    return new Date().toISOString();
+function getDateStr() {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // "2026-08-05"
 }
 
-// Atau guna ini untuk format terus
-function getCurrentTimeMalaysia() {
-    return new Date().toLocaleString('ms-MY', {
-        timeZone: 'Asia/Kuala_Lumpur',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+function getTimeStr() {
+    const now = new Date();
+    return now.toTimeString().split(' ')[0]; // "18:30:00"
+}
+
+// ============================================
+// SAVE TO HISTORY
+// ============================================
+
+function saveToHistory(temp, humid, gas) {
+    const dateStr = getDateStr();
+    const timeStr = getTimeStr();
+    
+    const data = {
+        temperature: temp,
+        humidity: humid,
+        gas: gas
+    };
+    
+    const path = `sensor_data/history/${dateStr}/${timeStr}`;
+    database.ref(path).set(data);
+    
+    // ==========================================
+    // CLEANUP OLD DATA (>30 MINIT) - TAMBAH DI SINI
+    // ==========================================
+    cleanupOldData();
+}
+
+// ============================================
+// CLEANUP OLD DATA (>30 MINIT) - LENGKAP
+// ============================================
+
+function cleanupOldData() {
+    const now = new Date();
+    const cutoffTime = new Date(now.getTime() - (30 * 60 * 1000));
+    const cutoffDateStr = cutoffTime.toISOString().split('T')[0];
+    const cutoffTimeStr = cutoffTime.toTimeString().split(' ')[0];
+    
+    historyRef.once('value', (snapshot) => {
+        const history = snapshot.val();
+        if (!history) return;
+        
+        const updates = {};
+        let deleteCount = 0;
+        
+        Object.keys(history).forEach(date => {
+            // If date is older than cutoff date, delete entire date
+            if (date < cutoffDateStr) {
+                updates[date] = null;
+                deleteCount++;
+                return;
+            }
+            
+            // If same date, check times
+            if (date === cutoffDateStr) {
+                const times = history[date];
+                Object.keys(times).forEach(time => {
+                    if (time < cutoffTimeStr) {
+                        updates[`${date}/${time}`] = null;
+                        deleteCount++;
+                    }
+                });
+            }
+        });
+        
+        // Apply updates (delete old data)
+        if (deleteCount > 0) {
+            historyRef.update(updates);
+            console.log(`🧹 Cleaned ${deleteCount} old data entries (>30 minit)`);
+        }
     });
 }
+
+// ============================================
+// GET HISTORY FOR LAST 30 MINUTES
+// ============================================
+
+function getHistoryData(callback) {
+    const now = new Date();
+    const cutoffTime = new Date(now.getTime() - (30 * 60 * 1000));
+    const cutoffDateStr = cutoffTime.toISOString().split('T')[0];
+    const cutoffTimeStr = cutoffTime.toTimeString().split(' ')[0];
+    
+    historyRef.once('value', (snapshot) => {
+        const history = snapshot.val();
+        if (!history) {
+            callback([]);
+            return;
+        }
+        
+        const results = [];
+        
+        Object.keys(history).forEach(date => {
+            if (date < cutoffDateStr) return;
+            
+            const times = history[date];
+            Object.keys(times).forEach(time => {
+                if (date === cutoffDateStr && time < cutoffTimeStr) return;
+                
+                const data = times[time];
+                results.push({
+                    timestamp: `${date} ${time}`,
+                    temperature: data.temperature || 0,
+                    humidity: data.humidity || 0,
+                    gas: data.gas || 0
+                });
+            });
+        });
+        
+        // Sort by timestamp
+        results.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+        callback(results);
+    });
+}
+
+// ============================================
+// STATUS CHECK FUNCTIONS
+// ============================================
 
 function getTemperatureStatus(value) {
     if (value === undefined || value === null || isNaN(value)) {
@@ -146,6 +198,7 @@ function getGasStatus(value) {
 function getSystemStatus(temp, humid, gas) {
     const tempStatus = getTemperatureStatus(temp);
     const gasStatus = getGasStatus(gas);
+    const humidStatus = getHumidityStatus(humid);
     
     if (tempStatus.class === 'danger' || gasStatus.class === 'danger') {
         return { text: '🚨 DANGER!', class: 'danger' };
@@ -153,7 +206,7 @@ function getSystemStatus(temp, humid, gas) {
     
     if (tempStatus.class === 'warning' || 
         gasStatus.class === 'warning' || 
-        getHumidityStatus(humid).class === 'warning') {
+        humidStatus.class === 'warning') {
         return { text: '⚠️ Warning', class: 'warning' };
     }
     

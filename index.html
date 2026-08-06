@@ -11,14 +11,22 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
     </script>
 
-    <!-- ===== CHART.JS (VERSION 3 - PALING STABLE) ===== -->
+    <!-- ===== CHART.JS (VERSION 3) ===== -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js">
+    </script>
+
+    <!-- ===== SHEETJS (XLSX) UNTUK EXPORT EXCEL ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+    </script>
+
+    <!-- ===== FILE SAVER UNTUK DOWNLOAD ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js">
     </script>
 
     <!-- ===== FONT AWESOME ===== -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-    <!-- ===== CUSTOM CSS (TANPA FOLDER) ===== -->
+    <!-- ===== CUSTOM CSS ===== -->
     <link rel="stylesheet" href="style.css" />
 
 </head>
@@ -29,9 +37,14 @@
         <div class="header-content">
             <i class="fas fa-fire-extinguisher header-icon"></i>
             <h1>SISTEM MONITORING PENGGERA KEBAKARAN</h1>
-            <div class="status-badge" id="systemStatus">
-                <span class="status-dot"></span>
-                <span id="statusText">Menunggu Data...</span>
+            <div class="header-actions">
+                <button class="btn-export" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> 📊 Export Report
+                </button>
+                <div class="status-badge" id="systemStatus">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Menunggu Data...</span>
+                </div>
             </div>
         </div>
         <div class="header-sub">
@@ -89,53 +102,50 @@
 
         </section>
 
-<!-- ===== 3 REALTIME GRAPHS ===== -->
-<section class="charts-section">
-    <h2><i class="fas fa-chart-line"></i> Realtime Data Graph</h2>
-    <p class="chart-sub">Update setiap 5 saat</p>
+        <!-- ===== 3 REALTIME GRAPHS ===== -->
+        <section class="charts-section">
+            <h2><i class="fas fa-chart-line"></i> Realtime Data Graph</h2>
+            <p class="chart-sub">Update setiap 5 saat</p>
 
-    <div class="charts-grid">
+            <div class="charts-grid">
 
-        <!-- TEMPERATURE CHART -->
-        <div class="chart-box">
-            <h3>🌡️ Temperature</h3>
-            <div class="chart-container">
-                <canvas id="tempChart"></canvas>
-            </div>
-            <!-- LEGEND BOX UNTUK TEMPERATURE -->
-            <div class="legend-box" id="tempLegend">
-                <span class="legend-item">🟠 WARNING 37°C</span>
-                <span class="legend-item">🔴 DANGER 45°C</span>
-            </div>
-        </div>
+                <!-- TEMPERATURE CHART -->
+                <div class="chart-box">
+                    <h3>🌡️ Temperature</h3>
+                    <div class="chart-container">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                    <div class="legend-box" id="tempLegend">
+                        <span class="legend-item">🟠 WARNING 37°C</span>
+                        <span class="legend-item">🔴 DANGER 45°C</span>
+                    </div>
+                </div>
 
-        <!-- HUMIDITY CHART -->
-        <div class="chart-box">
-            <h3>💧 Humidity</h3>
-            <div class="chart-container">
-                <canvas id="humidChart"></canvas>
-            </div>
-            <!-- LEGEND BOX UNTUK HUMIDITY -->
-            <div class="legend-box" id="humidLegend">
-                <span class="legend-item">🟠 WARNING 70%</span>
-            </div>
-        </div>
+                <!-- HUMIDITY CHART -->
+                <div class="chart-box">
+                    <h3>💧 Humidity</h3>
+                    <div class="chart-container">
+                        <canvas id="humidChart"></canvas>
+                    </div>
+                    <div class="legend-box" id="humidLegend">
+                        <span class="legend-item">🟠 WARNING 70%</span>
+                    </div>
+                </div>
 
-        <!-- GAS MQ2 CHART -->
-        <div class="chart-box">
-            <h3>💨 Gas MQ2</h3>
-            <div class="chart-container">
-                <canvas id="gasChart"></canvas>
-            </div>
-            <!-- LEGEND BOX UNTUK GAS -->
-            <div class="legend-box" id="gasLegend">
-                <span class="legend-item">🟠 WARNING 301</span>
-                <span class="legend-item">🔴 DANGER 701</span>
-            </div>
-        </div>
+                <!-- GAS MQ2 CHART -->
+                <div class="chart-box">
+                    <h3>💨 Gas MQ2</h3>
+                    <div class="chart-container">
+                        <canvas id="gasChart"></canvas>
+                    </div>
+                    <div class="legend-box" id="gasLegend">
+                        <span class="legend-item">🟠 WARNING 301</span>
+                        <span class="legend-item">🔴 DANGER 701</span>
+                    </div>
+                </div>
 
-    </div>
-</section>
+            </div>
+        </section>
 
         <footer class="footer">
             <p>© 2026 Sistem Monitoring Penggera Kebakaran IoT</p>
@@ -143,7 +153,7 @@
 
     </main>
 
-    <!-- ===== JAVASCRIPT (TANPA FOLDER) ===== -->
+    <!-- ===== JAVASCRIPT ===== -->
     <script src="firebase-config.js"></script>
     <script src="dashboard.js"></script>
 
