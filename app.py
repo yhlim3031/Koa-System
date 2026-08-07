@@ -28,12 +28,13 @@ def brighten_marker(series, marker_color="FF0000", line_color="4472C4"):
     series.graphicalProperties.line.solidFill = line_color
     series.graphicalProperties.line.width = 19050  # ~1.5pt, garis normal
 
-    # Marker bulat (circle) dengan saiz kecil
-    series.marker.symbol = 'circle'
-    series.marker.size =  1 # Saiz kecil
+    # Marker 'x' ialah bentuk TERBUKA (dua garis bersilang) — TIADA kawasan isi.
+    # Warna yang sebenarnya nampak ialah stroke/'ln', BUKAN 'solidFill'.
+    # Sebab itu solidFill merah tak nampak sebelum ini — ln (outline) kena jadi merah.
+    series.marker.symbol = '.'
+    series.marker.size = 1
     series.marker.graphicalProperties = GraphicalProperties(
-        solidFill=marker_color,  # Warna isi merah
-        ln=LineProperties(solidFill=marker_color, w=9525)  # Outline nipis ~0.75pt
+        ln=LineProperties(solidFill=marker_color, w=28575)  # ~2.25pt, tebal & terang
     )
 import io
 
