@@ -12,11 +12,14 @@
     <!-- 3. XLSX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
+    <!-- ★ PENTING: Pustaka tambahan untuk masukkan gambar ke Excel ★ -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
     <!-- ★ 4. FIREBASE SDK ★ -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-    <!-- ★ 5. IMPORT CONFIG DARI FAIL LUAR ★ -->
+    <!-- ★ 5. IMPORT CONFIG (DAN INIT) DARI FAIL LUAR ★ -->
     <script src="firebase-config.js"></script>
 
     <style>
@@ -217,9 +220,8 @@
 
     <!-- ===== JAVASCRIPT (FULL DASHBOARD LOGIC) ===== -->
     <script>
-        // ★ NOTA PENTING: 
-        // database, sensorRef, dan historyRef telah diinitialise oleh firebase-config.js
-        // Kita gunakan pembolehubah global tersebut terus. JANGAN init semula di sini!
+        // database, sensorRef, historyRef telah di'initialize' dalam firebase-config.js
+        // Jadi kita boleh guna terus.
 
         // ============================================
         // 1. CHART SETUP
@@ -396,7 +398,7 @@
         }
 
         // ============================================
-        // 4. ★ EXPORT EXCEL (3 CHART, 30 MINIT TERAKHIR) ★
+        // 4. ★ EXPORT EXCEL (3 CHART + GAMBAR GRAF) ★
         // ============================================
         function exportToExcel() {
             const btn = document.querySelector('.btn-export');
@@ -404,7 +406,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
             btn.disabled = true;
             
-            // ★ FUNGSI GET DATA 30 MINIT TERAKHIR (Guna historyRef global) ★
+            // ★ FUNGSI GET DATA 30 MINIT TERAKHIR ★
             getAllHistoryData((data) => {
                 if (!data || data.length === 0) {
                     alert('⚠️ Tiada data 30 minit terakhir untuk di export.');
@@ -412,14 +414,79 @@
                     btn.disabled = false;
                     return;
                 }
-                
+
+                // ★ 1. AMBIL GAMBAR GRAF DARI CANVAS ★
+                const tempImage = tempChart.toBase64Image();
+                const humidImage = humidChart.toBase64Image();
+                const gasImage = gasChart.toBase64Image();
+
                 const wb = XLSX.utils.book_new();
                 const now = new Date();
                 const dateStr = now.toLocaleDateString('ms-MY');
                 const timeStr = now.toLocaleTimeString('ms-MY', { hour12: false });
+                
+                // ==========================================
+                // 1. SHEET: GAMBAR GRAF (Muka Depan)
+                // ==========================================
+                const imgData = [
+                    ['LAPORAN DATA SISTEM MONITORING PENGGERA KEBAKARAN'],
+                    [`Tarikh: ${dateStr} | Masa: ${timeStr}`],
+                    ['', '', 'GRAF SUHU', '', 'GRAF KELEMBAPAN', '', 'GRAF GAS'],
+                    ['', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '']
+                ];
+
+                // Buat ruang kosong untuk masukkan gambar
+                const wsImg = XLSX.utils.aoa_to_sheet(imgData);
+                wsImg['!cols'] = [{ wch: 5 }, { wch: 5 }, { wch: 25 }, { wch: 5 }, { wch: 25 }, { wch: 5 }, { wch: 25 }];
+                wsImg['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
+                    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } },
+                    { s: { r: 2, c: 2 }, e: { r: 2, c: 2 } },
+                    { s: { r: 2, c: 4 }, e: { r: 2, c: 4 } },
+                    { s: { r: 2, c: 6 }, e: { r: 2, c: 6 } }
+                ];
+
+                // Masukkan gambar ke dalam Excel (Gunakan xlsx-js-style)
+                const tempImgId = XLSX.utils.sheet_add_image(wsImg, {
+                    base64: tempImage.replace(/^data:image\/png;base64,/, ''),
+                    type: 'base64',
+                    ext: 'png',
+                    r: 3, // Baris 4 (index 3)
+                    c: 2, // Kolum C (index 2)
+                    w: 300,
+                    h: 200
+                });
+
+                const humidImgId = XLSX.utils.sheet_add_image(wsImg, {
+                    base64: humidImage.replace(/^data:image\/png;base64,/, ''),
+                    type: 'base64',
+                    ext: 'png',
+                    r: 3,
+                    c: 4,
+                    w: 300,
+                    h: 200
+                });
+
+                const gasImgId = XLSX.utils.sheet_add_image(wsImg, {
+                    base64: gasImage.replace(/^data:image\/png;base64,/, ''),
+                    type: 'base64',
+                    ext: 'png',
+                    r: 3,
+                    c: 6,
+                    w: 300,
+                    h: 200
+                });
 
                 // ==========================================
-                // 1. SHEET TEMPERATURE
+                // 2. SHEET TEMPERATURE (DATA)
                 // ==========================================
                 const tempData = [];
                 tempData.push(['LAPORAN DATA SUHU (°C)']);
@@ -444,7 +511,7 @@
                 styleWorksheet(wsTemp, tempData.length - 1);
 
                 // ==========================================
-                // 2. SHEET HUMIDITY
+                // 3. SHEET HUMIDITY (DATA)
                 // ==========================================
                 const humidData = [];
                 humidData.push(['LAPORAN DATA KELEMBAPAN (%)']);
@@ -468,7 +535,7 @@
                 styleWorksheet(wsHumid, humidData.length - 1);
 
                 // ==========================================
-                // 3. SHEET GAS
+                // 4. SHEET GAS (DATA)
                 // ==========================================
                 const gasData = [];
                 gasData.push(['LAPORAN DATA GAS (ADC)']);
@@ -495,6 +562,7 @@
                 // ==========================================
                 // GABUNG & DOWNLOAD
                 // ==========================================
+                XLSX.utils.book_append_sheet(wb, wsImg, 'Graf Laporan');
                 XLSX.utils.book_append_sheet(wb, wsTemp, 'Temperature');
                 XLSX.utils.book_append_sheet(wb, wsHumid, 'Humidity');
                 XLSX.utils.book_append_sheet(wb, wsGas, 'Gas');
@@ -550,35 +618,45 @@
         }
 
         // ============================================
-        // 5. ★ AMBIL DATA 30 MINIT TERAKHIR SAHAJA (Guna historyRef global) ★
+        // 5. ★ AMBIL SEMUA DATA 30 MINIT TERAKHIR (LOGIK TEPAT) ★
         // ============================================
         function getAllHistoryData(callback) {
-            // historyRef telah diisytihar dalam firebase-config.js
             historyRef.once('value').then((snapshot) => {
                 const val = snapshot.val();
                 if (!val) { callback([]); return; }
 
-                // ★ TAPISAN 30 MINIT ★
+                // ★ Kira waktu cutoff 30 minit lepas dalam format Malaysia ★
                 const now = new Date();
-                const cutoffTime = new Date(now.getTime() - (30 * 60 * 1000));
+                // Tukar ke waktu Malaysia untuk pengiraan
+                const nowMY = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
+                const cutoffTime = new Date(nowMY.getTime() - (30 * 60 * 1000));
+
+                // Format cutoff kepada 'yyyy-mm-dd hh:mm:ss' untuk perbandingan string
                 const cutoffDateStr = cutoffTime.toISOString().split('T')[0];
                 const cutoffTimeStr = cutoffTime.toTimeString().split(' ')[0];
+                const cutoffString = `${cutoffDateStr} ${cutoffTimeStr}`;
 
                 const allData = [];
-                const dates = Object.keys(val).sort();
+                const dates = Object.keys(val).sort(); // Susun tarikh
+
                 dates.forEach(date => {
-                    if (date < cutoffDateStr) return;
-                    const times = Object.keys(val[date]).sort();
+                    const times = Object.keys(val[date]).sort(); // Susun masa
                     times.forEach(time => {
-                        if (date === cutoffDateStr && time < cutoffTimeStr) return;
-                        const record = val[date][time];
-                        if (record) {
-                            allData.push({
-                                timestamp: `${date} ${time}`,
-                                temperature: record.temperature,
-                                humidity: record.humidity,
-                                gas: record.gas
-                            });
+                        // Gabungkan tarikh dan masa menjadi string
+                        const recordTimestamp = `${date} ${time}`;
+                        
+                        // ★ Bandingkan terus string timestamp! ★
+                        // Jika recordTimestamp LEBIH BESAR dari cutoffString, ia adalah data terkini
+                        if (recordTimestamp >= cutoffString) {
+                            const record = val[date][time];
+                            if (record) {
+                                allData.push({
+                                    timestamp: recordTimestamp,
+                                    temperature: record.temperature,
+                                    humidity: record.humidity,
+                                    gas: record.gas
+                                });
+                            }
                         }
                     });
                 });
@@ -592,13 +670,12 @@
         }
 
         // ============================================
-        // 6. ★ AMBIL DATA TERKINI DARI 'latest' (Guna sensorRef global) ★
+        // 6. ★ AMBIL DATA TERKINI DARI 'latest' ★
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
             console.log("🔄 Menunggu data terkini dari Firebase (node 'latest')...");
             
-            // sensorRef telah diisytihar dalam firebase-config.js
             sensorRef.on('value', (snapshot) => {
                 const latestData = snapshot.val();
                 if (latestData) {

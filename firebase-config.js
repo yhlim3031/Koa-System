@@ -12,5 +12,9 @@ const firebaseConfig = {
     measurementId: "G-738DY1MGRK"
 };
 
-// KELUARKAN PEMBOLEH UBAH UNTUK DIGUNAKAN DI INDEX.HTML
-// JANGAN PANGGIL firebase.initializeApp DI SINI!
+// ★ INISIALISASI FIREBASE DI SINI ★
+firebase.initializeApp(firebaseConfig);
+
+const database = firebase.database();
+const sensorRef = database.ref('sensor_data/latest');
+const historyRef = database.ref('sensor_data/history');
