@@ -3,6 +3,7 @@ from flask_cors import CORS
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from openpyxl.chart import LineChart, Reference
+from openpyxl.chart.text import RichText
 import io
 
 app = Flask(__name__)
@@ -105,16 +106,13 @@ def generate_excel():
     chart_temp.title = "Suhu (°C)"
     chart_temp.style = 13
     chart_temp.add_data(data_values)
-    chart_temp.series[0].title = "Suhu (°C)"
+    chart_temp.series[0].tx = "Suhu (°C)"  # ★ Dibaiki: guna .tx (teks) bukan .title ★
     chart_temp.set_categories(data_cats)
     
     chart_temp.series[0].marker.symbol = 'x'
     chart_temp.series[0].marker.size = 5
 
-    # ★ TAJUK PAKSI Y (MENDATAR) ★
     chart_temp.y_axis.title = "Suhu (°C)"
-    
-    # ★ LABEL MASA PADA PAKSI X (DIPUSING 90 DARJAH) ★
     chart_temp.x_axis.tickLblRot = 90
 
     chart_temp.legend.position = 'b'
@@ -172,7 +170,7 @@ def generate_excel():
     chart_humid.title = "Kelembapan (%)"
     chart_humid.style = 12
     chart_humid.add_data(data_humid_values)
-    chart_humid.series[0].title = "Kelembapan (%)"
+    chart_humid.series[0].tx = "Kelembapan (%)"  # ★ Dibaiki ★
     chart_humid.set_categories(data_cats)
     
     chart_humid.series[0].marker.symbol = 'x'
@@ -236,7 +234,7 @@ def generate_excel():
     chart_gas.title = "Gas (ADC)"
     chart_gas.style = 11
     chart_gas.add_data(data_gas_values)
-    chart_gas.series[0].title = "Gas (ADC)"
+    chart_gas.series[0].tx = "Gas (ADC)"  # ★ Dibaiki ★
     chart_gas.set_categories(data_cats)
     
     chart_gas.series[0].marker.symbol = 'x'
