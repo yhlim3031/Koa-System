@@ -30,7 +30,7 @@ def brighten_marker(series, marker_color="FF0000", line_color="4472C4"):
 
     # Marker bulat (circle) dengan saiz kecil
     series.marker.symbol = 'circle'
-    series.marker.size = 5  # Saiz kecil
+    series.marker.size =  1 # Saiz kecil
     series.marker.graphicalProperties = GraphicalProperties(
         solidFill=marker_color,  # Warna isi merah
         ln=LineProperties(solidFill=marker_color, w=9525)  # Outline nipis ~0.75pt
