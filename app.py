@@ -139,8 +139,8 @@ def generate_excel():
     chart_temp.y_axis.scaling.max = 50
     chart_temp.x_axis.auto = False
     chart_temp.x_axis.tickLblPos = 'low'
-    chart_temp.width = 30
-    chart_temp.height = 15
+    chart_temp.width = 27
+    chart_temp.height = 13.5
     ws_temp_chart.add_chart(chart_temp, "A4")
 
     ws_humid_data = wb.create_sheet("Humidity Data")
@@ -190,8 +190,8 @@ def generate_excel():
     chart_humid.y_axis.scaling.max = 100
     chart_humid.x_axis.auto = False
     chart_humid.x_axis.tickLblPos = 'low'
-    chart_humid.width = 30
-    chart_humid.height = 15
+    chart_humid.width = 27
+    chart_humid.height = 13.5
     ws_humid_chart.add_chart(chart_humid, "A4")
 
     ws_gas_data = wb.create_sheet("Gas Data")
@@ -240,8 +240,8 @@ def generate_excel():
     chart_gas.y_axis.scaling.max = 1000
     chart_gas.x_axis.auto = False
     chart_gas.x_axis.tickLblPos = 'low'
-    chart_gas.width = 30
-    chart_gas.height = 15
+    chart_gas.width = 27
+    chart_gas.height = 13.5
     ws_gas_chart.add_chart(chart_gas, "A4")
 
     output = io.BytesIO()
