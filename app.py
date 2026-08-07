@@ -1,4 +1,5 @@
 from flask import Flask, request, send_file
+from flask_cors import CORS  # ★ TAMBAH BARIS INI ★
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from openpyxl.chart import LineChart, Reference
@@ -6,6 +7,7 @@ import io
 import json
 
 app = Flask(__name__)
+CORS(app)  # ★ TAMBAH BARIS INI (Aktifkan CORS untuk semua domain) ★
 
 # Warna Excel standard (ARGB format)
 COLOR_NORMAL_BG = "FFC6EFCE"
@@ -54,7 +56,6 @@ def generate_excel():
     ws_temp_data.append([f"Tarikh: {date_str} | Masa: {time_str}"])
     ws_temp_data.append(["Masa", "Suhu (°C)", "Status"])
     
-    # Style Header
     for cell in ws_temp_data[3]:
         style_cell(cell, is_header=True)
 
@@ -63,7 +64,6 @@ def generate_excel():
         s = row.get('tempStatus', 'NORMAL')
         ws_temp_data.append([row.get('time'), f"{t:.1f}", s])
         
-    # Style Rows
     for i in range(4, len(ws_temp_data) + 1):
         status = ws_temp_data.cell(row=i, column=3).value
         for col in range(1, 4):
@@ -73,7 +73,7 @@ def generate_excel():
     ws_temp_data.column_dimensions['B'].width = 15
     ws_temp_data.column_dimensions['C'].width = 20
 
-    # --- 2. SHEET TEMPERATURE CHART (AUTOMATIC) ---
+    # --- 2. SHEET TEMPERATURE CHART ---
     ws_temp_chart = wb.create_sheet("Temperature Chart")
     chart_temp = LineChart()
     chart_temp.title = "Graf Suhu (30 Minit Terakhir)"
@@ -113,7 +113,7 @@ def generate_excel():
     chart_humid.style = 12
     data_humid = Reference(ws_humid_data, min_col=2, min_row=3, max_row=len(rows)+2)
     chart_humid.add_data(data_humid, titles_from_data=True)
-    chart_humid.set_categories(cats_temp) # Guna paksi masa yang sama
+    chart_humid.set_categories(cats_temp)
     ws_humid_chart.add_chart(chart_humid, "A1")
 
     # --- 5. SHEET GAS DATA ---
@@ -148,7 +148,6 @@ def generate_excel():
     chart_gas.set_categories(cats_temp)
     ws_gas_chart.add_chart(chart_gas, "A1")
 
-    # --- SIMPAN KE MEMORI DAN HANTAR BALIK ---
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
