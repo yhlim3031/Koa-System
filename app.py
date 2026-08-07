@@ -84,7 +84,7 @@ def generate_excel():
     ws_temp_data.column_dimensions['C'].width = 20
 
     # ==========================================
-    # 2. SHEET: TEMPERATURE CHART (DIBAIKI SEPENUHNYA)
+    # 2. SHEET: TEMPERATURE CHART
     # ==========================================
     ws_temp_chart = wb.create_sheet("Temperature Chart")
     for col in range(1, 6):
@@ -95,7 +95,6 @@ def generate_excel():
     ws_temp_chart.merge_cells('A1:E1')
     ws_temp_chart.merge_cells('A2:E2')
 
-    # ★ RUJUKAN DATA KHUSUS UNTUK TEMPERATURE ★
     temp_data_values = Reference(ws_temp_data, min_col=2, min_row=4, max_row=row_count+3)
     temp_data_cats = Reference(ws_temp_data, min_col=1, min_row=4, max_row=row_count+3)
     
@@ -103,13 +102,12 @@ def generate_excel():
     chart_temp.title = "Suhu (°C)"
     chart_temp.style = 13
     chart_temp.add_data(temp_data_values)
-    chart_temp.series[0].series_label = "Suhu (°C)"
+    # ★ CARA PALING SELAMAT: Guna .title pada series itu sendiri ★
+    chart_temp.series[0].title = "Suhu (°C)"  
     chart_temp.set_categories(temp_data_cats)
     
-    # ★ BUANG LEGENDA ★
     chart_temp.legend.position = None
 
-    # ★ MARKER X LEBIH BESAR & TERANG ★
     chart_temp.series[0].marker.symbol = 'x'
     chart_temp.series[0].marker.size = 8
 
@@ -151,7 +149,7 @@ def generate_excel():
     ws_humid_data.column_dimensions['C'].width = 20
 
     # ==========================================
-    # 4. SHEET: HUMIDITY CHART (DIBAIKI SEPENUHNYA)
+    # 4. SHEET: HUMIDITY CHART
     # ==========================================
     ws_humid_chart = wb.create_sheet("Humidity Chart")
     for col in range(1, 6):
@@ -162,7 +160,6 @@ def generate_excel():
     ws_humid_chart.merge_cells('A1:E1')
     ws_humid_chart.merge_cells('A2:E2')
 
-    # ★ RUJUKAN DATA KHUSUS UNTUK HUMIDITY (JANGAN GUNA data_cats TEMP!) ★
     humid_data_values = Reference(ws_humid_data, min_col=2, min_row=4, max_row=row_count+3)
     humid_data_cats = Reference(ws_humid_data, min_col=1, min_row=4, max_row=row_count+3)
     
@@ -170,13 +167,12 @@ def generate_excel():
     chart_humid.title = "Kelembapan (%)"
     chart_humid.style = 12
     chart_humid.add_data(humid_data_values)
-    chart_humid.series[0].series_label = "Kelembapan (%)"
-    chart_humid.set_categories(humid_data_cats)  # ★ BUKAN data_cats! ★
+    # ★ CARA PALING SELAMAT: Guna .title pada series itu sendiri ★
+    chart_humid.series[0].title = "Kelembapan (%)"
+    chart_humid.set_categories(humid_data_cats)
     
-    # ★ BUANG LEGENDA ★
     chart_humid.legend.position = None
 
-    # ★ MARKER X LEBIH BESAR & TERANG ★
     chart_humid.series[0].marker.symbol = 'x'
     chart_humid.series[0].marker.size = 8
 
@@ -194,7 +190,7 @@ def generate_excel():
     ws_humid_chart.add_chart(chart_humid, "A4")
 
     # ==========================================
-    # 5. SHEET: GAS DATA (SAMA SEPERTI BIASA, SAYA TAK UBAH)
+    # 5. SHEET: GAS DATA
     # ==========================================
     ws_gas_data = wb.create_sheet("Gas Data")
     ws_gas_data.append(["LAPORAN DATA GAS (ADC)"])
@@ -218,7 +214,7 @@ def generate_excel():
     ws_gas_data.column_dimensions['C'].width = 20
 
     # ==========================================
-    # 6. SHEET: GAS CHART (SEPERTI BIASA, SAYA TAK UBAH)
+    # 6. SHEET: GAS CHART
     # ==========================================
     ws_gas_chart = wb.create_sheet("Gas Chart")
     
@@ -237,10 +233,10 @@ def generate_excel():
     chart_gas.title = "Gas (ADC)"
     chart_gas.style = 11
     chart_gas.add_data(gas_data_values)
-    chart_gas.series[0].series_label = "Gas (ADC)"
+    # ★ CARA PALING SELAMAT: Guna .title pada series itu sendiri ★
+    chart_gas.series[0].title = "Gas (ADC)"
     chart_gas.set_categories(gas_data_cats)
     
-    # ★ BUANG LEGENDA ★
     chart_gas.legend.position = None
 
     chart_gas.series[0].marker.symbol = 'x'
