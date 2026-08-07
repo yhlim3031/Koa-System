@@ -10,8 +10,9 @@
     <!-- 2. FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <!-- ★ PENTING: Hanya guna xlsx-js-style (buang xlsx.full.min.js!) ★ -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <!-- ★ PERUBAHAN PENTING: EXCELJS & FILE-SAVER UNTUK CHART AUTOMATIK ★ -->
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
     <!-- ★ 4. FIREBASE SDK ★ -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -22,7 +23,7 @@
 
     <style>
         /* ==============================
-           CSS (DASHBOARD & BUTTON)
+           CSS (DASHBOARD & BUTTON) - SAMA SEPERTI BIASA
            ============================== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -44,7 +45,6 @@
         }
         .header-actions { display: flex; align-items: center; gap: 1rem; }
         
-        /* BUTANG EXPORT */
         .btn-export {
             display: flex; align-items: center; justify-content: center; gap: 8px;
             width: auto !important; padding: 0.6rem 1.2rem; 
@@ -53,8 +53,6 @@
             cursor: pointer; transition: all 0.3s;
         }
         .btn-export:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); }
-        .btn-export:active { transform: scale(0.95); }
-        .btn-export i { font-size: 1.1rem; }
 
         .status-badge {
             display: flex; align-items: center; gap: 10px;
@@ -70,18 +68,10 @@
 
         .container { max-width: 1400px; margin: 0 auto; }
 
-        /* Sensor Grid */
         .sensor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .sensor-card {
-            background: linear-gradient(135deg, #141b2b, #1a2a3a); border: 1px solid #1a2a3a;
-            border-radius: 16px; padding: 1.8rem; display: flex; align-items: center; gap: 1.5rem;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
+        .sensor-card { background: linear-gradient(135deg, #141b2b, #1a2a3a); border: 1px solid #1a2a3a; border-radius: 16px; padding: 1.8rem; display: flex; align-items: center; gap: 1.5rem; transition: transform 0.3s, box-shadow 0.3s; }
         .sensor-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
-        .card-icon {
-            width: 70px; height: 70px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 2rem; flex-shrink: 0;
-        }
+        .card-icon { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; flex-shrink: 0; }
         .card-temp .card-icon { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
         .card-humid .card-icon { background: rgba(78, 205, 196, 0.15); color: #4ecdc4; }
         .card-gas .card-icon { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
@@ -94,7 +84,6 @@
         .card-status.warning { color: #f39c12; }
         .card-status.danger { color: #e74c3c; }
 
-        /* Charts */
         .charts-section { background: linear-gradient(135deg, #141b2b, #1a2a3a); border: 1px solid #1a2a3a; border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
         .charts-section h2 { font-size: 1.4rem; color: #e0e0e0; margin-bottom: 0.3rem; }
         .charts-section h2 i { color: #4ecdc4; margin-right: 10px; }
@@ -104,19 +93,8 @@
         .chart-box h3 { font-size: 0.9rem; color: #8899aa; font-weight: 400; margin-bottom: 0.8rem; text-align: center; }
         .chart-container { position: relative; height: 200px; width: 100%; }
 
-        /* Legend Boxes */
-        .legend-box {
-            display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
-            padding: 8px 12px; margin-top: 10px; background: #0a0e17;
-            border-radius: 8px; border: 1px solid #1a2a3a; min-height: 32px;
-        }
-        .legend-item {
-            font-size: 11px; font-weight: 500; color: #8899aa;
-            padding: 2px 10px; border-radius: 4px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s;
-        }
+        .legend-box { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; padding: 8px 12px; margin-top: 10px; background: #0a0e17; border-radius: 8px; border: 1px solid #1a2a3a; min-height: 32px; }
+        .legend-item { font-size: 11px; font-weight: 500; color: #8899aa; padding: 2px 10px; border-radius: 4px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s; }
 
         .footer { text-align: center; padding: 1.5rem 0; color: #556677; font-size: 0.85rem; border-top: 1px solid #1a2a3a; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -129,7 +107,6 @@
 </head>
 <body>
 
-    <!-- ===== HEADER ===== -->
     <header class="header">
         <div class="header-content">
             <i class="fas fa-fire-extinguisher header-icon"></i>
@@ -149,7 +126,6 @@
         </div>
     </header>
 
-    <!-- ===== DASHBOARD CARDS ===== -->
     <div class="container">
         <div class="sensor-grid">
             <div class="sensor-card card-temp">
@@ -178,13 +154,10 @@
             </div>
         </div>
 
-        <!-- ===== CHARTS & LEGEND ===== -->
         <div class="charts-section">
             <h2><i class="fas fa-chart-line"></i> Realtime Data Graph</h2>
             <div class="chart-sub">Update setiap 5 saat</div>
-            
             <div class="charts-grid">
-                <!-- Temperature -->
                 <div class="chart-box">
                     <h3><i class="fas fa-thermometer-half" style="color:#ff6b6b;"></i> Temperature</h3>
                     <div class="chart-container"><canvas id="tempChart"></canvas></div>
@@ -193,7 +166,6 @@
                         <span class="legend-item">🔴 DANGER 45°C</span>
                     </div>
                 </div>
-                <!-- Humidity -->
                 <div class="chart-box">
                     <h3><i class="fas fa-tint" style="color:#4ecdc4;"></i> Humidity</h3>
                     <div class="chart-container"><canvas id="humidChart"></canvas></div>
@@ -201,7 +173,6 @@
                         <span class="legend-item">🟠 WARNING 70%</span>
                     </div>
                 </div>
-                <!-- Gas -->
                 <div class="chart-box">
                     <h3><i class="fas fa-fire" style="color:#f39c12;"></i> Gas MQ2</h3>
                     <div class="chart-container"><canvas id="gasChart"></canvas></div>
@@ -216,10 +187,9 @@
 
     <footer class="footer">&copy; 2026 Sistem Monitoring Penggera Kebakaran.</footer>
 
-    <!-- ===== JAVASCRIPT (FULL DASHBOARD LOGIC) ===== -->
+    <!-- ===== JAVASCRIPT (FULL DASHBOARD LOGIC + EXPORT 6 SHEET) ===== -->
     <script>
-        // database, sensorRef, historyRef telah di'initialize' dalam firebase-config.js
-        // Jadi kita boleh guna terus.
+        // database, sensorRef, historyRef dari firebase-config.js
 
         // ============================================
         // 1. CHART SETUP
@@ -301,12 +271,6 @@
             return { text: '✅ Normal', class: 'normal' };
         }
 
-        function determineStatus(temp, humid, gas) {
-            if (temp >= 45 || gas > 700) return 'DANGER';
-            if (temp >= 37 || humid >= 70 || gas >= 301) return 'WARNING';
-            return 'NORMAL';
-        }
-
         // ============================================
         // 3. UPDATE DASHBOARD (AMBIL DARI LATEST)
         // ============================================
@@ -339,7 +303,7 @@
             document.getElementById('statusText').textContent = sysText;
 
             // ============================================
-            // ★ UPDATE LEGEND BOXES (DOM CHILDREN - TAHAN GAGAL) ★
+            // ★ UPDATE LEGEND BOXES (DOM CHILDREN) ★
             // ============================================
             const resetStyle = (el) => {
                 if (!el) return;
@@ -366,7 +330,6 @@
                 el.style.animation = 'pulse 1s infinite';
             };
 
-            // TEMP
             const tempLegend = document.getElementById('tempLegend');
             if (tempLegend) {
                 resetStyle(tempLegend.children[0]);
@@ -374,15 +337,11 @@
                 if (tStat.class === 'danger') setDangerStyle(tempLegend.children[1]);
                 else if (tStat.class === 'warning') setWarningStyle(tempLegend.children[0]);
             }
-
-            // HUMID
             const humidLegend = document.getElementById('humidLegend');
             if (humidLegend) {
                 resetStyle(humidLegend.children[0]);
                 if (hStat.class === 'warning') setWarningStyle(humidLegend.children[0]);
             }
-
-            // GAS
             const gasLegend = document.getElementById('gasLegend');
             if (gasLegend) {
                 resetStyle(gasLegend.children[0]);
@@ -396,7 +355,7 @@
         }
 
         // ============================================
-        // 4. ★ EXPORT EXCEL (3 CHART + GAMBAR GRAF) ★
+        // 4. ★ EXPORT EXCEL (6 SHEET: DATA + CHART OTOMATIS) ★
         // ============================================
         function exportToExcel() {
             const btn = document.querySelector('.btn-export');
@@ -413,85 +372,40 @@
                     return;
                 }
 
-                // ★ 1. AMBIL GAMBAR GRAF DARI CANVAS ★
-                const tempImage = tempChart.toBase64Image();
-                const humidImage = humidChart.toBase64Image();
-                const gasImage = gasChart.toBase64Image();
-
-                const wb = XLSX.utils.book_new();
+                const wb = new ExcelJS.Workbook();
                 const now = new Date();
                 const dateStr = now.toLocaleDateString('ms-MY');
                 const timeStr = now.toLocaleTimeString('ms-MY', { hour12: false });
-                
-                // ==========================================
-                // 1. SHEET: GAMBAR GRAF (Muka Depan)
-                // ==========================================
-                const imgData = [
-                    ['LAPORAN DATA SISTEM MONITORING PENGGERA KEBAKARAN'],
-                    [`Tarikh: ${dateStr} | Masa: ${timeStr}`],
-                    ['', '', 'GRAF SUHU', '', 'GRAF KELEMBAPAN', '', 'GRAF GAS'],
-                    ['', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '']
-                ];
+                const totalRows = data.length + 2; // Baris untuk header dan data
 
-                // Buat ruang kosong untuk masukkan gambar
-                const wsImg = XLSX.utils.aoa_to_sheet(imgData);
-                wsImg['!cols'] = [{ wch: 5 }, { wch: 5 }, { wch: 25 }, { wch: 5 }, { wch: 25 }, { wch: 5 }, { wch: 25 }];
-                wsImg['!merges'] = [
-                    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
-                    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } },
-                    { s: { r: 2, c: 2 }, e: { r: 2, c: 2 } },
-                    { s: { r: 2, c: 4 }, e: { r: 2, c: 4 } },
-                    { s: { r: 2, c: 6 }, e: { r: 2, c: 6 } }
-                ];
-
-                // Masukkan gambar ke dalam Excel (Gunakan xlsx-js-style)
-                const tempImgId = XLSX.utils.sheet_add_image(wsImg, {
-                    base64: tempImage.replace(/^data:image\/png;base64,/, ''),
-                    type: 'base64',
-                    ext: 'png',
-                    r: 3, // Baris 4 (index 3)
-                    c: 2, // Kolum C (index 2)
-                    w: 300,
-                    h: 200
-                });
-
-                const humidImgId = XLSX.utils.sheet_add_image(wsImg, {
-                    base64: humidImage.replace(/^data:image\/png;base64,/, ''),
-                    type: 'base64',
-                    ext: 'png',
-                    r: 3,
-                    c: 4,
-                    w: 300,
-                    h: 200
-                });
-
-                const gasImgId = XLSX.utils.sheet_add_image(wsImg, {
-                    base64: gasImage.replace(/^data:image\/png;base64,/, ''),
-                    type: 'base64',
-                    ext: 'png',
-                    r: 3,
-                    c: 6,
-                    w: 300,
-                    h: 200
-                });
+                // ★ HELPER: SET STYLE EXCEL (Border, Alignment, Warna Baris) ★
+                const styleCell = (cell, isHeader, rowStatus) => {
+                    cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+                    if (isHeader) {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+                        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    } else {
+                        cell.alignment = { horizontal: 'left', vertical: 'middle' };
+                        if (rowStatus) {
+                            let bg = 'FFC6EFCE', font = 'FF006100'; // Normal (Hijau)
+                            if (rowStatus === 'WARNING') { bg = 'FFFFEB9C'; font = 'FF9C5700'; }
+                            else if (rowStatus === 'DANGER') { bg = 'FFFFC7CE'; font = 'FF9C0006'; }
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+                            cell.font = { bold: true, color: { argb: font } };
+                        }
+                    }
+                };
 
                 // ==========================================
-                // 2. SHEET TEMPERATURE (DATA)
+                // 1. SHEET: TEMPERATURE DATA
                 // ==========================================
-                const tempData = [];
-                tempData.push(['LAPORAN DATA SUHU (°C)']);
-                tempData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
-                tempData.push(['Bil', 'Masa', 'Suhu (°C)', 'Status']);
-                
-                let bil = 1;
+                const wsTempData = wb.addWorksheet('Temperature Data');
+                wsTempData.addRow(['LAPORAN DATA SUHU (°C)']);
+                wsTempData.addRow([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
+                const tempHead = wsTempData.addRow(['Masa', 'Suhu (°C)', 'Status']);
+                tempHead.eachCell((cell) => styleCell(cell, true));
+
                 data.forEach(row => {
                     const temp = Number(row.temperature) || 0;
                     const stat = getTemperatureStatus(temp);
@@ -500,23 +414,42 @@
                     else if(statusText === 'WARNING') statusText = 'WARNING';
                     else statusText = 'NORMAL';
 
-                    tempData.push([bil++, row.timestamp.split(' ')[1], temp.toFixed(1), statusText]);
+                    const r = wsTempData.addRow([row.timestamp.split(' ')[1], temp.toFixed(1), statusText]);
+                    r.eachCell((cell) => styleCell(cell, false, statusText));
                 });
-                
-                const wsTemp = XLSX.utils.aoa_to_sheet(tempData);
-                wsTemp['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 20 }];
-                wsTemp['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }];
-                styleWorksheet(wsTemp, tempData.length - 1);
+                wsTempData.getColumn(1).width = 15;
+                wsTempData.getColumn(2).width = 15;
+                wsTempData.getColumn(3).width = 20;
+                wsTempData.getRow(1).height = 20; wsTempData.getRow(2).height = 20;
 
                 // ==========================================
-                // 3. SHEET HUMIDITY (DATA)
+                // 2. SHEET: TEMPERATURE CHART (AUTOMATIC)
                 // ==========================================
-                const humidData = [];
-                humidData.push(['LAPORAN DATA KELEMBAPAN (%)']);
-                humidData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
-                humidData.push(['Bil', 'Masa', 'Kelembapan (%)', 'Status']);
-                
-                bil = 1;
+                const wsTempChart = wb.addWorksheet('Temperature Chart');
+                // Rujukan data untuk Chart
+                const startRow = 3; // Row 3 mula header
+                const endRow = data.length + 2;
+                const dataRefCol1 = `'Temperature Data'!A${startRow}:A${endRow}`;
+                const dataRefCol2 = `'Temperature Data'!B${startRow}:B${endRow}`;
+                const chartTemp = wsTempChart.addChart('tempChart', {
+                    type: 'line',
+                    data: [{ label: 'Suhu (°C)', ref: dataRefCol2 }],
+                    xAxis: { type: 'category', ref: dataRefCol1 },
+                    title: 'Graf Suhu (30 Minit Terakhir)',
+                    width: 800,
+                    height: 500
+                });
+                chartTemp.top = 0; chartTemp.left = 0;
+
+                // ==========================================
+                // 3. SHEET: HUMIDITY DATA
+                // ==========================================
+                const wsHumidData = wb.addWorksheet('Humidity Data');
+                wsHumidData.addRow(['LAPORAN DATA KELEMBAPAN (%)']);
+                wsHumidData.addRow([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
+                const humidHead = wsHumidData.addRow(['Masa', 'Kelembapan (%)', 'Status']);
+                humidHead.eachCell((cell) => styleCell(cell, true));
+
                 data.forEach(row => {
                     const humid = Number(row.humidity) || 0;
                     const stat = getHumidityStatus(humid);
@@ -524,23 +457,37 @@
                     if(statusText === 'WARNING') statusText = 'WARNING';
                     else statusText = 'NORMAL';
 
-                    humidData.push([bil++, row.timestamp.split(' ')[1], humid.toFixed(1), statusText]);
+                    const r = wsHumidData.addRow([row.timestamp.split(' ')[1], humid.toFixed(1), statusText]);
+                    r.eachCell((cell) => styleCell(cell, false, statusText));
                 });
-                
-                const wsHumid = XLSX.utils.aoa_to_sheet(humidData);
-                wsHumid['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 18 }, { wch: 20 }];
-                wsHumid['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }];
-                styleWorksheet(wsHumid, humidData.length - 1);
+                wsHumidData.getColumn(1).width = 15;
+                wsHumidData.getColumn(2).width = 18;
+                wsHumidData.getColumn(3).width = 20;
 
                 // ==========================================
-                // 4. SHEET GAS (DATA)
+                // 4. SHEET: HUMIDITY CHART (AUTOMATIC)
                 // ==========================================
-                const gasData = [];
-                gasData.push(['LAPORAN DATA GAS (ADC)']);
-                gasData.push([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
-                gasData.push(['Bil', 'Masa', 'Gas (ADC)', 'Status']);
-                
-                bil = 1;
+                const wsHumidChart = wb.addWorksheet('Humidity Chart');
+                const dataRefCol3 = `'Humidity Data'!B${startRow}:B${endRow}`;
+                const chartHumid = wsHumidChart.addChart('humidChart', {
+                    type: 'line',
+                    data: [{ label: 'Kelembapan (%)', ref: dataRefCol3 }],
+                    xAxis: { type: 'category', ref: dataRefCol1 },
+                    title: 'Graf Kelembapan (30 Minit Terakhir)',
+                    width: 800,
+                    height: 500
+                });
+                chartHumid.top = 0; chartHumid.left = 0;
+
+                // ==========================================
+                // 5. SHEET: GAS DATA
+                // ==========================================
+                const wsGasData = wb.addWorksheet('Gas Data');
+                wsGasData.addRow(['LAPORAN DATA GAS (ADC)']);
+                wsGasData.addRow([`Tarikh: ${dateStr} | Masa: ${timeStr}`]);
+                const gasHead = wsGasData.addRow(['Masa', 'Gas (ADC)', 'Status']);
+                gasHead.eachCell((cell) => styleCell(cell, true));
+
                 data.forEach(row => {
                     const gas = Number(row.gas) || 0;
                     const stat = getGasStatus(gas);
@@ -549,74 +496,47 @@
                     else if(statusText === 'WARNING') statusText = 'WARNING';
                     else statusText = 'NORMAL';
 
-                    gasData.push([bil++, row.timestamp.split(' ')[1], Math.round(gas), statusText]);
+                    const r = wsGasData.addRow([row.timestamp.split(' ')[1], Math.round(gas), statusText]);
+                    r.eachCell((cell) => styleCell(cell, false, statusText));
                 });
-                
-                const wsGas = XLSX.utils.aoa_to_sheet(gasData);
-                wsGas['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 14 }, { wch: 20 }];
-                wsGas['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }];
-                styleWorksheet(wsGas, gasData.length - 1);
+                wsGasData.getColumn(1).width = 15;
+                wsGasData.getColumn(2).width = 14;
+                wsGasData.getColumn(3).width = 20;
 
                 // ==========================================
-                // GABUNG & DOWNLOAD
+                // 6. SHEET: GAS CHART (AUTOMATIC)
                 // ==========================================
-                XLSX.utils.book_append_sheet(wb, wsImg, 'Graf Laporan');
-                XLSX.utils.book_append_sheet(wb, wsTemp, 'Temperature');
-                XLSX.utils.book_append_sheet(wb, wsHumid, 'Humidity');
-                XLSX.utils.book_append_sheet(wb, wsGas, 'Gas');
-                
-                XLSX.writeFile(wb, `Laporan_3_Chart_${dateStr.replace(/\//g, '-')}.xlsx`);
-                
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                const wsGasChart = wb.addWorksheet('Gas Chart');
+                const dataRefCol4 = `'Gas Data'!B${startRow}:B${endRow}`;
+                const chartGas = wsGasChart.addChart('gasChart', {
+                    type: 'line',
+                    data: [{ label: 'Gas (ADC)', ref: dataRefCol4 }],
+                    xAxis: { type: 'category', ref: dataRefCol1 },
+                    title: 'Graf Gas (30 Minit Terakhir)',
+                    width: 800,
+                    height: 500
+                });
+                chartGas.top = 0; chartGas.left = 0;
+
+                // ==========================================
+                // SIMPAN EXCEL
+                // ==========================================
+                wb.xlsx.writeBuffer().then((buffer) => {
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    saveAs(blob, `Laporan_6_Sheet_${dateStr.replace(/\//g, '-')}.xlsx`);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }).catch((error) => {
+                    console.error("❌ Gagal simpan fail:", error);
+                    alert('Ralat semasa menjana fail. Sila semak Console.');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
             });
         }
 
         // ============================================
-        // ★ HELPER: STYLE UNTUK EXCEL ★
-        // ============================================
-        function styleWorksheet(ws, lastRow) {
-            for (let R = 0; R <= lastRow; R++) {
-                let rowBg = null, rowFont = null;
-                if (R >= 3) {
-                    const statusAddr = XLSX.utils.encode_cell({ r: R, c: 3 });
-                    const statusCell = ws[statusAddr];
-                    if (statusCell && statusCell.v) {
-                        const sVal = statusCell.v.toString().toLowerCase();
-                        if (sVal.includes('warning')) { rowBg = "FFEB9C"; rowFont = "9C5700"; }
-                        else if (sVal.includes('danger')) { rowBg = "FFC7CE"; rowFont = "9C0006"; }
-                        else if (sVal.includes('normal')) { rowBg = "C6EFCE"; rowFont = "006100"; }
-                    }
-                }
-
-                for (let C = 0; C <= 3; C++) {
-                    const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
-                    const cell = ws[cellAddr];
-                    if (!cell) continue;
-                    if (!cell.s) cell.s = {};
-
-                    cell.s.border = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
-
-                    if (R === 0 || R === 1) {
-                        cell.s.font = { bold: true, sz: 14 };
-                        cell.s.alignment = { horizontal: "center", vertical: "center" };
-                    } else if (R === 2) {
-                        cell.s.fill = { fgColor: { rgb: "4472C4" } };
-                        cell.s.font = { bold: true, color: { rgb: "FFFFFF" }, sz: 12 };
-                        cell.s.alignment = { horizontal: "center", vertical: "center" };
-                    } else if (R >= 3) {
-                        cell.s.alignment = { horizontal: "left", vertical: "center" };
-                        if (rowBg) {
-                            cell.s.fill = { fgColor: { rgb: rowBg } };
-                            cell.s.font = { color: { rgb: rowFont }, bold: true };
-                        }
-                    }
-                }
-            }
-        }
-
-        // ============================================
-        // 5. ★ AMBIL SEMUA DATA 30 MINIT TERAKHIR (LOGIK TEPAT) ★
+        // 5. ★ AMBIL SEMUA DATA 30 MINIT TERAKHIR ★
         // ============================================
         function getAllHistoryData(callback) {
             historyRef.once('value').then((snapshot) => {
@@ -625,26 +545,18 @@
 
                 // ★ Kira waktu cutoff 30 minit lepas dalam format Malaysia ★
                 const now = new Date();
-                // Tukar ke waktu Malaysia untuk pengiraan
                 const nowMY = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
                 const cutoffTime = new Date(nowMY.getTime() - (30 * 60 * 1000));
-
-                // Format cutoff kepada 'yyyy-mm-dd hh:mm:ss' untuk perbandingan string
                 const cutoffDateStr = cutoffTime.toISOString().split('T')[0];
                 const cutoffTimeStr = cutoffTime.toTimeString().split(' ')[0];
                 const cutoffString = `${cutoffDateStr} ${cutoffTimeStr}`;
 
                 const allData = [];
-                const dates = Object.keys(val).sort(); // Susun tarikh
-
+                const dates = Object.keys(val).sort();
                 dates.forEach(date => {
-                    const times = Object.keys(val[date]).sort(); // Susun masa
+                    const times = Object.keys(val[date]).sort();
                     times.forEach(time => {
-                        // Gabungkan tarikh dan masa menjadi string
                         const recordTimestamp = `${date} ${time}`;
-                        
-                        // ★ Bandingkan terus string timestamp! ★
-                        // Jika recordTimestamp LEBIH BESAR dari cutoffString, ia adalah data terkini
                         if (recordTimestamp >= cutoffString) {
                             const record = val[date][time];
                             if (record) {
@@ -673,7 +585,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
             console.log("🔄 Menunggu data terkini dari Firebase (node 'latest')...");
-            
             sensorRef.on('value', (snapshot) => {
                 const latestData = snapshot.val();
                 if (latestData) {
