@@ -31,8 +31,8 @@ def brighten_marker(series, marker_color="FF0000", line_color="4472C4"):
     # Marker 'x' ialah bentuk TERBUKA (dua garis bersilang) — TIADA kawasan isi.
     # Warna yang sebenarnya nampak ialah stroke/'ln', BUKAN 'solidFill'.
     # Sebab itu solidFill merah tak nampak sebelum ini — ln (outline) kena jadi merah.
-    series.marker.symbol = '.'
-    series.marker.size = 1
+    series.marker.symbol = 'circle'
+    series.marker.size = 2
     series.marker.graphicalProperties = GraphicalProperties(
         ln=LineProperties(solidFill=marker_color, w=28575)  # ~2.25pt, tebal & terang
     )
