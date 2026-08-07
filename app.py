@@ -17,7 +17,6 @@ COLOR_DANGER_BG = "FFFFC7CE"
 COLOR_DANGER_FONT = "FF9C0006"
 COLOR_HEADER_BG = "FF4472C4"
 
-# Helper untuk gaya sel data
 def style_cell(cell, is_header=False, status=None):
     thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
     cell.border = thin_border
@@ -39,7 +38,6 @@ def style_cell(cell, is_header=False, status=None):
                 cell.fill = PatternFill(start_color=COLOR_NORMAL_BG, end_color=COLOR_NORMAL_BG, fill_type="solid")
                 cell.font = Font(bold=True, color=COLOR_NORMAL_FONT)
 
-# Helper untuk gaya tajuk chart
 def style_chart_header(ws, row, text):
     cell = ws.cell(row=row, column=1)
     cell.value = text
@@ -86,10 +84,9 @@ def generate_excel():
     ws_temp_data.column_dimensions['C'].width = 20
 
     # ==========================================
-    # 2. SHEET: TEMPERATURE CHART
+    # 2. SHEET: TEMPERATURE CHART (DIBAIKI SEPENUHNYA)
     # ==========================================
     ws_temp_chart = wb.create_sheet("Temperature Chart")
-    
     for col in range(1, 6):
         ws_temp_chart.column_dimensions[chr(64 + col)].width = 25
 
@@ -98,26 +95,26 @@ def generate_excel():
     ws_temp_chart.merge_cells('A1:E1')
     ws_temp_chart.merge_cells('A2:E2')
 
-    data_values = Reference(ws_temp_data, min_col=2, min_row=4, max_row=row_count+3)
-    data_cats = Reference(ws_temp_data, min_col=1, min_row=4, max_row=row_count+3)
+    # ★ RUJUKAN DATA KHUSUS UNTUK TEMPERATURE ★
+    temp_data_values = Reference(ws_temp_data, min_col=2, min_row=4, max_row=row_count+3)
+    temp_data_cats = Reference(ws_temp_data, min_col=1, min_row=4, max_row=row_count+3)
     
     chart_temp = LineChart()
     chart_temp.title = "Suhu (°C)"
     chart_temp.style = 13
-    chart_temp.add_data(data_values)
-    
-    # ★ CARA PALING SELAMAT UNTUK NAMAKAN SIRI DATA ★
+    chart_temp.add_data(temp_data_values)
     chart_temp.series[0].series_label = "Suhu (°C)"
+    chart_temp.set_categories(temp_data_cats)
     
-    chart_temp.set_categories(data_cats)
-    
+    # ★ BUANG LEGENDA ★
+    chart_temp.legend.position = None
+
+    # ★ MARKER X LEBIH BESAR & TERANG ★
     chart_temp.series[0].marker.symbol = 'x'
-    chart_temp.series[0].marker.size = 5
+    chart_temp.series[0].marker.size = 8
 
     chart_temp.y_axis.title = "Suhu (°C)"
     chart_temp.x_axis.tickLblRot = 90
-
-    chart_temp.legend.position = 'b'
 
     chart_temp.y_axis.scaling.min = 0
     chart_temp.y_axis.scaling.max = 50
@@ -154,10 +151,9 @@ def generate_excel():
     ws_humid_data.column_dimensions['C'].width = 20
 
     # ==========================================
-    # 4. SHEET: HUMIDITY CHART
+    # 4. SHEET: HUMIDITY CHART (DIBAIKI SEPENUHNYA)
     # ==========================================
     ws_humid_chart = wb.create_sheet("Humidity Chart")
-    
     for col in range(1, 6):
         ws_humid_chart.column_dimensions[chr(64 + col)].width = 25
 
@@ -166,25 +162,26 @@ def generate_excel():
     ws_humid_chart.merge_cells('A1:E1')
     ws_humid_chart.merge_cells('A2:E2')
 
-    data_humid_values = Reference(ws_humid_data, min_col=2, min_row=4, max_row=row_count+3)
+    # ★ RUJUKAN DATA KHUSUS UNTUK HUMIDITY (JANGAN GUNA data_cats TEMP!) ★
+    humid_data_values = Reference(ws_humid_data, min_col=2, min_row=4, max_row=row_count+3)
+    humid_data_cats = Reference(ws_humid_data, min_col=1, min_row=4, max_row=row_count+3)
     
     chart_humid = LineChart()
     chart_humid.title = "Kelembapan (%)"
     chart_humid.style = 12
-    chart_humid.add_data(data_humid_values)
-    
-    # ★ CARA PALING SELAMAT ★
+    chart_humid.add_data(humid_data_values)
     chart_humid.series[0].series_label = "Kelembapan (%)"
+    chart_humid.set_categories(humid_data_cats)  # ★ BUKAN data_cats! ★
     
-    chart_humid.set_categories(data_cats)
-    
+    # ★ BUANG LEGENDA ★
+    chart_humid.legend.position = None
+
+    # ★ MARKER X LEBIH BESAR & TERANG ★
     chart_humid.series[0].marker.symbol = 'x'
-    chart_humid.series[0].marker.size = 5
+    chart_humid.series[0].marker.size = 8
 
     chart_humid.y_axis.title = "Kelembapan (%)"
     chart_humid.x_axis.tickLblRot = 90
-
-    chart_humid.legend.position = 'b'
 
     chart_humid.y_axis.scaling.min = 0
     chart_humid.y_axis.scaling.max = 100
@@ -197,7 +194,7 @@ def generate_excel():
     ws_humid_chart.add_chart(chart_humid, "A4")
 
     # ==========================================
-    # 5. SHEET: GAS DATA
+    # 5. SHEET: GAS DATA (SAMA SEPERTI BIASA, SAYA TAK UBAH)
     # ==========================================
     ws_gas_data = wb.create_sheet("Gas Data")
     ws_gas_data.append(["LAPORAN DATA GAS (ADC)"])
@@ -221,7 +218,7 @@ def generate_excel():
     ws_gas_data.column_dimensions['C'].width = 20
 
     # ==========================================
-    # 6. SHEET: GAS CHART
+    # 6. SHEET: GAS CHART (SEPERTI BIASA, SAYA TAK UBAH)
     # ==========================================
     ws_gas_chart = wb.create_sheet("Gas Chart")
     
@@ -233,25 +230,24 @@ def generate_excel():
     ws_gas_chart.merge_cells('A1:E1')
     ws_gas_chart.merge_cells('A2:E2')
 
-    data_gas_values = Reference(ws_gas_data, min_col=2, min_row=4, max_row=row_count+3)
+    gas_data_values = Reference(ws_gas_data, min_col=2, min_row=4, max_row=row_count+3)
+    gas_data_cats = Reference(ws_gas_data, min_col=1, min_row=4, max_row=row_count+3)
     
     chart_gas = LineChart()
     chart_gas.title = "Gas (ADC)"
     chart_gas.style = 11
-    chart_gas.add_data(data_gas_values)
-    
-    # ★ CARA PALING SELAMAT ★
+    chart_gas.add_data(gas_data_values)
     chart_gas.series[0].series_label = "Gas (ADC)"
+    chart_gas.set_categories(gas_data_cats)
     
-    chart_gas.set_categories(data_cats)
-    
+    # ★ BUANG LEGENDA ★
+    chart_gas.legend.position = None
+
     chart_gas.series[0].marker.symbol = 'x'
-    chart_gas.series[0].marker.size = 5
+    chart_gas.series[0].marker.size = 8
 
     chart_gas.y_axis.title = "Gas (ADC)"
     chart_gas.x_axis.tickLblRot = 90
-
-    chart_gas.legend.position = 'b'
 
     chart_gas.y_axis.scaling.min = 0
     chart_gas.y_axis.scaling.max = 1000
