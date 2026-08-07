@@ -3,7 +3,6 @@ from flask_cors import CORS
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from openpyxl.chart import LineChart, Reference
-from openpyxl.chart.label import DataLabelList
 import io
 
 app = Flask(__name__)
@@ -40,7 +39,7 @@ def style_cell(cell, is_header=False, status=None):
                 cell.fill = PatternFill(start_color=COLOR_NORMAL_BG, end_color=COLOR_NORMAL_BG, fill_type="solid")
                 cell.font = Font(bold=True, color=COLOR_NORMAL_FONT)
 
-# Helper untuk gaya tajuk chart (di merge)
+# Helper untuk gaya tajuk chart
 def style_chart_header(ws, row, text):
     cell = ws.cell(row=row, column=1)
     cell.value = text
@@ -99,23 +98,24 @@ def generate_excel():
     ws_temp_chart.merge_cells('A1:E1')
     ws_temp_chart.merge_cells('A2:E2')
 
-    # ★ RUJUKAN PAKSI X (A4,A5,A6...) DAN PAKSI Y (B4,B5,B6...) ★
     data_values = Reference(ws_temp_data, min_col=2, min_row=4, max_row=row_count+3)
     data_cats = Reference(ws_temp_data, min_col=1, min_row=4, max_row=row_count+3)
     
     chart_temp = LineChart()
     chart_temp.title = "Suhu (°C)"
     chart_temp.style = 13
-    chart_temp.add_data(data_values, titles_from_data=True)
+    chart_temp.add_data(data_values)
+    chart_temp.series[0].title = "Suhu (°C)"
     chart_temp.set_categories(data_cats)
     
-    # ★ TITIK DATA (MARKER) & LABEL NILAI DI ATAS TITIK ★
-    chart_temp.series[0].marker.symbol = 'circle'
+    chart_temp.series[0].marker.symbol = 'x'
     chart_temp.series[0].marker.size = 5
 
-    # Label Paksi X dan Paksi Y
-    chart_temp.x_axis.title = "Masa"
-    chart_temp.y_axis.title = "Nilai Suhu (°C)"
+    # ★ TAJUK PAKSI Y (MENDATAR) ★
+    chart_temp.y_axis.title = "Suhu (°C)"
+    
+    # ★ LABEL MASA PADA PAKSI X (DIPUSING 90 DARJAH) ★
+    chart_temp.x_axis.tickLblRot = 90
 
     chart_temp.legend.position = 'b'
 
@@ -123,7 +123,6 @@ def generate_excel():
     chart_temp.y_axis.scaling.max = 50
     chart_temp.x_axis.auto = False
     chart_temp.x_axis.tickLblPos = 'low'
-    chart_temp.x_axis.tickLblRot = 90
     
     chart_temp.width = 30
     chart_temp.height = 15
@@ -167,22 +166,20 @@ def generate_excel():
     ws_humid_chart.merge_cells('A1:E1')
     ws_humid_chart.merge_cells('A2:E2')
 
-    # ★ RUJUKAN PAKSI X (A4,A5,A6...) DAN PAKSI Y (B4,B5,B6...) ★
     data_humid_values = Reference(ws_humid_data, min_col=2, min_row=4, max_row=row_count+3)
     
     chart_humid = LineChart()
     chart_humid.title = "Kelembapan (%)"
     chart_humid.style = 12
-    chart_humid.add_data(data_humid_values, titles_from_data=True)
+    chart_humid.add_data(data_humid_values)
+    chart_humid.series[0].title = "Kelembapan (%)"
     chart_humid.set_categories(data_cats)
     
-    # ★ TITIK DATA & LABEL ★
-    chart_humid.series[0].marker.symbol = 'circle'
+    chart_humid.series[0].marker.symbol = 'x'
     chart_humid.series[0].marker.size = 5
-    
-    # Label Paksi X dan Paksi Y
-    chart_humid.x_axis.title = "Masa"
-    chart_humid.y_axis.title = "Nilai Kelembapan (%)"
+
+    chart_humid.y_axis.title = "Kelembapan (%)"
+    chart_humid.x_axis.tickLblRot = 90
 
     chart_humid.legend.position = 'b'
 
@@ -190,7 +187,6 @@ def generate_excel():
     chart_humid.y_axis.scaling.max = 100
     chart_humid.x_axis.auto = False
     chart_humid.x_axis.tickLblPos = 'low'
-    chart_humid.x_axis.tickLblRot = 90
     
     chart_humid.width = 30
     chart_humid.height = 15
@@ -234,22 +230,20 @@ def generate_excel():
     ws_gas_chart.merge_cells('A1:E1')
     ws_gas_chart.merge_cells('A2:E2')
 
-    # ★ RUJUKAN PAKSI X (A4,A5,A6...) DAN PAKSI Y (B4,B5,B6...) ★
     data_gas_values = Reference(ws_gas_data, min_col=2, min_row=4, max_row=row_count+3)
     
     chart_gas = LineChart()
     chart_gas.title = "Gas (ADC)"
     chart_gas.style = 11
-    chart_gas.add_data(data_gas_values, titles_from_data=True)
+    chart_gas.add_data(data_gas_values)
+    chart_gas.series[0].title = "Gas (ADC)"
     chart_gas.set_categories(data_cats)
     
-    # ★ TITIK DATA & LABEL ★
-    chart_gas.series[0].marker.symbol = 'circle'
+    chart_gas.series[0].marker.symbol = 'x'
     chart_gas.series[0].marker.size = 5
 
-    # Label Paksi X dan Paksi Y
-    chart_gas.x_axis.title = "Masa"
-    chart_gas.y_axis.title = "Nilai Gas (ADC)"
+    chart_gas.y_axis.title = "Gas (ADC)"
+    chart_gas.x_axis.tickLblRot = 90
 
     chart_gas.legend.position = 'b'
 
@@ -257,7 +251,6 @@ def generate_excel():
     chart_gas.y_axis.scaling.max = 1000
     chart_gas.x_axis.auto = False
     chart_gas.x_axis.tickLblPos = 'low'
-    chart_gas.x_axis.tickLblRot = 90
     
     chart_gas.width = 30
     chart_gas.height = 15
