@@ -39,8 +39,8 @@ def style_cell(cell, is_header=False, status=None):
                 cell.fill = PatternFill(start_color=COLOR_NORMAL_BG, end_color=COLOR_NORMAL_BG, fill_type="solid")
                 cell.font = Font(bold=True, color=COLOR_NORMAL_FONT)
 
-# Helper untuk gaya tajuk pada Sheet Chart
-def style_chart_title(ws, row, text):
+# Helper untuk gaya tajuk chart (di merge)
+def style_chart_header(ws, row, text):
     cell = ws.cell(row=row, column=1)
     cell.value = text
     cell.font = Font(bold=True, sz=14)
@@ -52,6 +52,10 @@ def generate_excel():
     rows = data.get('data', [])
     date_str = data.get('date_str', 'Tidak diketahui')
     time_str = data.get('time_str', 'Tidak diketahui')
+    
+    row_count = len(rows)
+    if row_count == 0:
+        return "No data", 400
 
     wb = Workbook()
     
@@ -86,32 +90,41 @@ def generate_excel():
     # ==========================================
     ws_temp_chart = wb.create_sheet("Temperature Chart")
     
-    style_chart_title(ws_temp_chart, 1, "LAPORAN DATA SUHU (°C)")
-    style_chart_title(ws_temp_chart, 2, f"Tarikh: {date_str} | Masa: {time_str}")
-    ws_temp_chart.merge_cells('A1:C1')
-    ws_temp_chart.merge_cells('A2:C2')
+    # ★ Lebarkan kolum supaya header merge tidak terpotong ★
+    ws_temp_chart.column_dimensions['A'].width = 25
+    ws_temp_chart.column_dimensions['B'].width = 25
+    ws_temp_chart.column_dimensions['C'].width = 25
+    ws_temp_chart.column_dimensions['D'].width = 25
+    ws_temp_chart.column_dimensions['E'].width = 25
 
-    chart_temp = LineChart()
-    chart_temp.title = "Graf Suhu (30 Minit Terakhir)"
-    chart_temp.style = 13
+    style_chart_header(ws_temp_chart, 1, "LAPORAN DATA SUHU (°C)")
+    style_chart_header(ws_temp_chart, 2, f"Tarikh: {date_str} | Masa: {time_str}")
+    # ★ Merge header sehingga E1 supaya teks panjang muat ★
+    ws_temp_chart.merge_cells('A1:E1')
+    ws_temp_chart.merge_cells('A2:E2')
+
+    # ★ Rujukan Data Yang Tepat ★
+    data_temp = Reference(ws_temp_data, min_col=2, min_row=3, max_row=row_count+2)
+    cats_temp = Reference(ws_temp_data, min_col=1, min_row=3, max_row=row_count+2)
     
-    data_temp = Reference(ws_temp_data, min_col=2, min_row=3, max_row=len(rows)+2)
-    cats_temp = Reference(ws_temp_data, min_col=1, min_row=3, max_row=len(rows)+2)
+    chart_temp = LineChart()
+    chart_temp.title = "Suhu (°C)"  # ★ Tajuk ringkas tanpa 30 Minit Terakhir ★
+    chart_temp.style = 13
     chart_temp.add_data(data_temp, titles_from_data=True)
     chart_temp.set_categories(cats_temp)
+    
+    chart_temp.legend.position = 'b'  # Letak legenda di bawah
 
-    # ★ Tetapkan Paksi Y 0-50 ★
+    # ★ PAKSI Y: 0-50 ★
     chart_temp.y_axis.scaling.min = 0
     chart_temp.y_axis.scaling.max = 50
-    
-    # ★ PAKSI X: Putaran 90 darjah (Menegak) & Papar semua ★
+    # ★ PAKSI X: Papar semua, pusing 90 darjah ★
     chart_temp.x_axis.auto = False
     chart_temp.x_axis.tickLblPos = 'low'
-    chart_temp.x_axis.tickLblRot = 90  # <-- Pusingkan label ke menegak
-
-    # ★ Besarkan saiz graf untuk muat 300 data ★
+    chart_temp.x_axis.tickLblRot = 90
+    
     chart_temp.width = 30
-    chart_temp.height = 12
+    chart_temp.height = 15
 
     ws_temp_chart.add_chart(chart_temp, "A4")
 
@@ -144,31 +157,36 @@ def generate_excel():
     # ==========================================
     ws_humid_chart = wb.create_sheet("Humidity Chart")
     
-    style_chart_title(ws_humid_chart, 1, "LAPORAN DATA KELEMBAPAN (%)")
-    style_chart_title(ws_humid_chart, 2, f"Tarikh: {date_str} | Masa: {time_str}")
-    ws_humid_chart.merge_cells('A1:C1')
-    ws_humid_chart.merge_cells('A2:C2')
+    ws_humid_chart.column_dimensions['A'].width = 25
+    ws_humid_chart.column_dimensions['B'].width = 25
+    ws_humid_chart.column_dimensions['C'].width = 25
+    ws_humid_chart.column_dimensions['D'].width = 25
+    ws_humid_chart.column_dimensions['E'].width = 25
 
-    chart_humid = LineChart()
-    chart_humid.title = "Graf Kelembapan (30 Minit Terakhir)"
-    chart_humid.style = 12
+    style_chart_header(ws_humid_chart, 1, "LAPORAN DATA KELEMBAPAN (%)")
+    style_chart_header(ws_humid_chart, 2, f"Tarikh: {date_str} | Masa: {time_str}")
+    ws_humid_chart.merge_cells('A1:E1')
+    ws_humid_chart.merge_cells('A2:E2')
+
+    # ★ Rujukan Data Humid ★
+    data_humid = Reference(ws_humid_data, min_col=2, min_row=3, max_row=row_count+2)
     
-    data_humid = Reference(ws_humid_data, min_col=2, min_row=3, max_row=len(rows)+2)
+    chart_humid = LineChart()
+    chart_humid.title = "Kelembapan (%)"
+    chart_humid.style = 12
     chart_humid.add_data(data_humid, titles_from_data=True)
-    chart_humid.set_categories(cats_temp)
+    chart_humid.set_categories(cats_temp) # Guna paksi X yang sama
+    chart_humid.legend.position = 'b'
 
-    # ★ Tetapkan Paksi Y 0-100 ★
     chart_humid.y_axis.scaling.min = 0
     chart_humid.y_axis.scaling.max = 100
     
-    # ★ PAKSI X: Putaran 90 darjah ★
     chart_humid.x_axis.auto = False
     chart_humid.x_axis.tickLblPos = 'low'
     chart_humid.x_axis.tickLblRot = 90
-
-    # ★ Besarkan saiz graf ★
+    
     chart_humid.width = 30
-    chart_humid.height = 12
+    chart_humid.height = 15
 
     ws_humid_chart.add_chart(chart_humid, "A4")
 
@@ -201,31 +219,36 @@ def generate_excel():
     # ==========================================
     ws_gas_chart = wb.create_sheet("Gas Chart")
     
-    style_chart_title(ws_gas_chart, 1, "LAPORAN DATA GAS (ADC)")
-    style_chart_title(ws_gas_chart, 2, f"Tarikh: {date_str} | Masa: {time_str}")
-    ws_gas_chart.merge_cells('A1:C1')
-    ws_gas_chart.merge_cells('A2:C2')
+    ws_gas_chart.column_dimensions['A'].width = 25
+    ws_gas_chart.column_dimensions['B'].width = 25
+    ws_gas_chart.column_dimensions['C'].width = 25
+    ws_gas_chart.column_dimensions['D'].width = 25
+    ws_gas_chart.column_dimensions['E'].width = 25
 
-    chart_gas = LineChart()
-    chart_gas.title = "Graf Gas (30 Minit Terakhir)"
-    chart_gas.style = 11
+    style_chart_header(ws_gas_chart, 1, "LAPORAN DATA GAS (ADC)")
+    style_chart_header(ws_gas_chart, 2, f"Tarikh: {date_str} | Masa: {time_str}")
+    ws_gas_chart.merge_cells('A1:E1')
+    ws_gas_chart.merge_cells('A2:E2')
+
+    # ★ Rujukan Data Gas ★
+    data_gas = Reference(ws_gas_data, min_col=2, min_row=3, max_row=row_count+2)
     
-    data_gas = Reference(ws_gas_data, min_col=2, min_row=3, max_row=len(rows)+2)
+    chart_gas = LineChart()
+    chart_gas.title = "Gas (ADC)"
+    chart_gas.style = 11
     chart_gas.add_data(data_gas, titles_from_data=True)
     chart_gas.set_categories(cats_temp)
+    chart_gas.legend.position = 'b'
 
-    # ★ Tetapkan Paksi Y 0-1000 ★
     chart_gas.y_axis.scaling.min = 0
     chart_gas.y_axis.scaling.max = 1000
     
-    # ★ PAKSI X: Putaran 90 darjah ★
     chart_gas.x_axis.auto = False
     chart_gas.x_axis.tickLblPos = 'low'
     chart_gas.x_axis.tickLblRot = 90
-
-    # ★ Besarkan saiz graf ★
+    
     chart_gas.width = 30
-    chart_gas.height = 12
+    chart_gas.height = 15
 
     ws_gas_chart.add_chart(chart_gas, "A4")
 
