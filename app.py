@@ -26,7 +26,7 @@ def rotate_axis_labels(axis, degrees=90):
 def brighten_marker(series, marker_color="FF0000", line_color="4472C4"):
     # Garisan siri data: kekal terang normal (1.0x) — biru pekat standard
     series.graphicalProperties.line.solidFill = line_color
-    series.graphicalProperties.line.width = 28575  # ~1.5pt, garis normal
+    series.graphicalProperties.line.width = 19050  # ~1.5pt, garis normal
 
     # Marker 'x' ialah bentuk TERBUKA (dua garis bersilang) — TIADA kawasan isi.
     # Warna yang sebenarnya nampak ialah stroke/'ln', BUKAN 'solidFill'.
