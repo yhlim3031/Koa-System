@@ -3,6 +3,7 @@ from flask_cors import CORS
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from openpyxl.chart import LineChart, Reference
+from openpyxl.chart.label import DataLabelList
 import io
 
 app = Flask(__name__)
@@ -90,35 +91,36 @@ def generate_excel():
     # ==========================================
     ws_temp_chart = wb.create_sheet("Temperature Chart")
     
-    # ★ Lebarkan kolum supaya header merge tidak terpotong ★
-    ws_temp_chart.column_dimensions['A'].width = 25
-    ws_temp_chart.column_dimensions['B'].width = 25
-    ws_temp_chart.column_dimensions['C'].width = 25
-    ws_temp_chart.column_dimensions['D'].width = 25
-    ws_temp_chart.column_dimensions['E'].width = 25
+    for col in range(1, 6):
+        ws_temp_chart.column_dimensions[chr(64 + col)].width = 25
 
     style_chart_header(ws_temp_chart, 1, "LAPORAN DATA SUHU (°C)")
     style_chart_header(ws_temp_chart, 2, f"Tarikh: {date_str} | Masa: {time_str}")
-    # ★ Merge header sehingga E1 supaya teks panjang muat ★
     ws_temp_chart.merge_cells('A1:E1')
     ws_temp_chart.merge_cells('A2:E2')
 
-    # ★ Rujukan Data Yang Tepat ★
-    data_temp = Reference(ws_temp_data, min_col=2, min_row=3, max_row=row_count+2)
-    cats_temp = Reference(ws_temp_data, min_col=1, min_row=3, max_row=row_count+2)
+    # ★ RUJUKAN PAKSI X (A4,A5,A6...) DAN PAKSI Y (B4,B5,B6...) ★
+    data_values = Reference(ws_temp_data, min_col=2, min_row=4, max_row=row_count+3)
+    data_cats = Reference(ws_temp_data, min_col=1, min_row=4, max_row=row_count+3)
     
     chart_temp = LineChart()
-    chart_temp.title = "Suhu (°C)"  # ★ Tajuk ringkas tanpa 30 Minit Terakhir ★
+    chart_temp.title = "Suhu (°C)"
     chart_temp.style = 13
-    chart_temp.add_data(data_temp, titles_from_data=True)
-    chart_temp.set_categories(cats_temp)
+    chart_temp.add_data(data_values, titles_from_data=True)
+    chart_temp.set_categories(data_cats)
     
-    chart_temp.legend.position = 'b'  # Letak legenda di bawah
+    # ★ TITIK DATA (MARKER) & LABEL NILAI DI ATAS TITIK ★
+    chart_temp.series[0].marker.symbol = 'circle'
+    chart_temp.series[0].marker.size = 5
 
-    # ★ PAKSI Y: 0-50 ★
+    # Label Paksi X dan Paksi Y
+    chart_temp.x_axis.title = "Masa"
+    chart_temp.y_axis.title = "Nilai Suhu (°C)"
+
+    chart_temp.legend.position = 'b'
+
     chart_temp.y_axis.scaling.min = 0
     chart_temp.y_axis.scaling.max = 50
-    # ★ PAKSI X: Papar semua, pusing 90 darjah ★
     chart_temp.x_axis.auto = False
     chart_temp.x_axis.tickLblPos = 'low'
     chart_temp.x_axis.tickLblRot = 90
@@ -149,7 +151,7 @@ def generate_excel():
             style_cell(ws_humid_data.cell(row=i, column=col), status=status)
             
     ws_humid_data.column_dimensions['A'].width = 15
-    ws_humid_data.column_dimensions['B'].width = 18
+    ws_humid_data.column_dimensions['B'].width = 22
     ws_humid_data.column_dimensions['C'].width = 20
 
     # ==========================================
@@ -157,30 +159,35 @@ def generate_excel():
     # ==========================================
     ws_humid_chart = wb.create_sheet("Humidity Chart")
     
-    ws_humid_chart.column_dimensions['A'].width = 25
-    ws_humid_chart.column_dimensions['B'].width = 25
-    ws_humid_chart.column_dimensions['C'].width = 25
-    ws_humid_chart.column_dimensions['D'].width = 25
-    ws_humid_chart.column_dimensions['E'].width = 25
+    for col in range(1, 6):
+        ws_humid_chart.column_dimensions[chr(64 + col)].width = 25
 
     style_chart_header(ws_humid_chart, 1, "LAPORAN DATA KELEMBAPAN (%)")
     style_chart_header(ws_humid_chart, 2, f"Tarikh: {date_str} | Masa: {time_str}")
     ws_humid_chart.merge_cells('A1:E1')
     ws_humid_chart.merge_cells('A2:E2')
 
-    # ★ Rujukan Data Humid ★
-    data_humid = Reference(ws_humid_data, min_col=2, min_row=3, max_row=row_count+2)
+    # ★ RUJUKAN PAKSI X (A4,A5,A6...) DAN PAKSI Y (B4,B5,B6...) ★
+    data_humid_values = Reference(ws_humid_data, min_col=2, min_row=4, max_row=row_count+3)
     
     chart_humid = LineChart()
     chart_humid.title = "Kelembapan (%)"
     chart_humid.style = 12
-    chart_humid.add_data(data_humid, titles_from_data=True)
-    chart_humid.set_categories(cats_temp) # Guna paksi X yang sama
+    chart_humid.add_data(data_humid_values, titles_from_data=True)
+    chart_humid.set_categories(data_cats)
+    
+    # ★ TITIK DATA & LABEL ★
+    chart_humid.series[0].marker.symbol = 'circle'
+    chart_humid.series[0].marker.size = 5
+    
+    # Label Paksi X dan Paksi Y
+    chart_humid.x_axis.title = "Masa"
+    chart_humid.y_axis.title = "Nilai Kelembapan (%)"
+
     chart_humid.legend.position = 'b'
 
     chart_humid.y_axis.scaling.min = 0
     chart_humid.y_axis.scaling.max = 100
-    
     chart_humid.x_axis.auto = False
     chart_humid.x_axis.tickLblPos = 'low'
     chart_humid.x_axis.tickLblRot = 90
@@ -219,30 +226,35 @@ def generate_excel():
     # ==========================================
     ws_gas_chart = wb.create_sheet("Gas Chart")
     
-    ws_gas_chart.column_dimensions['A'].width = 25
-    ws_gas_chart.column_dimensions['B'].width = 25
-    ws_gas_chart.column_dimensions['C'].width = 25
-    ws_gas_chart.column_dimensions['D'].width = 25
-    ws_gas_chart.column_dimensions['E'].width = 25
+    for col in range(1, 6):
+        ws_gas_chart.column_dimensions[chr(64 + col)].width = 25
 
     style_chart_header(ws_gas_chart, 1, "LAPORAN DATA GAS (ADC)")
     style_chart_header(ws_gas_chart, 2, f"Tarikh: {date_str} | Masa: {time_str}")
     ws_gas_chart.merge_cells('A1:E1')
     ws_gas_chart.merge_cells('A2:E2')
 
-    # ★ Rujukan Data Gas ★
-    data_gas = Reference(ws_gas_data, min_col=2, min_row=3, max_row=row_count+2)
+    # ★ RUJUKAN PAKSI X (A4,A5,A6...) DAN PAKSI Y (B4,B5,B6...) ★
+    data_gas_values = Reference(ws_gas_data, min_col=2, min_row=4, max_row=row_count+3)
     
     chart_gas = LineChart()
     chart_gas.title = "Gas (ADC)"
     chart_gas.style = 11
-    chart_gas.add_data(data_gas, titles_from_data=True)
-    chart_gas.set_categories(cats_temp)
+    chart_gas.add_data(data_gas_values, titles_from_data=True)
+    chart_gas.set_categories(data_cats)
+    
+    # ★ TITIK DATA & LABEL ★
+    chart_gas.series[0].marker.symbol = 'circle'
+    chart_gas.series[0].marker.size = 5
+
+    # Label Paksi X dan Paksi Y
+    chart_gas.x_axis.title = "Masa"
+    chart_gas.y_axis.title = "Nilai Gas (ADC)"
+
     chart_gas.legend.position = 'b'
 
     chart_gas.y_axis.scaling.min = 0
     chart_gas.y_axis.scaling.max = 1000
-    
     chart_gas.x_axis.auto = False
     chart_gas.x_axis.tickLblPos = 'low'
     chart_gas.x_axis.tickLblRot = 90
