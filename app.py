@@ -6,17 +6,35 @@ from openpyxl.chart import LineChart, Reference
 from openpyxl.chart.series import SeriesLabel
 from openpyxl.chart.shapes import GraphicalProperties
 from openpyxl.drawing.line import LineProperties
+from openpyxl.chart.text import RichText
+from openpyxl.drawing.text import RichTextProperties, Paragraph, ParagraphProperties, CharacterProperties
 
-def brighten_marker(series, marker_color="FFFF0000", line_color="FFB0C4DE"):
-    # Garisan: dinipiskan & warna dilembutkan supaya tidak "menelan" titik X
+def set_axis_title_horizontal(axis, text):
+    axis.title = text
+    # Paksa tajuk paksi kekal 0° (mendatar) walaupun label tick di-rotate 90°
+    axis.title.tx.rich.bodyPr.rot = 0
+    axis.title.tx.rich.bodyPr.vert = "horz"
+
+def rotate_axis_labels(axis, degrees=90):
+    # tickLblRot sahaja SENYAP GAGAL (tak serialize ke XML) — mesti guna txPr/bodyPr rot
+    # rot dalam unit 60000-per-darjah
+    axis.txPr = RichText(
+        bodyPr=RichTextProperties(rot=degrees * 60000, vert="horz"),
+        p=[Paragraph(pPr=ParagraphProperties(defRPr=CharacterProperties()), endParaRPr=CharacterProperties())]
+    )
+
+def brighten_marker(series, marker_color="FF0000", line_color="4472C4"):
+    # Garisan siri data: kekal terang normal (1.0x) — biru pekat standard
     series.graphicalProperties.line.solidFill = line_color
-    series.graphicalProperties.line.width = 15000  # ~1.2pt, lebih nipis dari default
-    # Marker X: lebih besar, warna terang, ada outline putih supaya kelihatan "timbul" depan garis
+    series.graphicalProperties.line.width = 19050  # ~1.5pt, garis normal
+
+    # Marker 'x' ialah bentuk TERBUKA (dua garis bersilang) — TIADA kawasan isi.
+    # Warna yang sebenarnya nampak ialah stroke/'ln', BUKAN 'solidFill'.
+    # Sebab itu solidFill merah tak nampak sebelum ini — ln (outline) kena jadi merah.
     series.marker.symbol = 'x'
-    series.marker.size = 9
+    series.marker.size = 13
     series.marker.graphicalProperties = GraphicalProperties(
-        solidFill=marker_color,
-        ln=LineProperties(solidFill="FFFFFFFF", w=9525)
+        ln=LineProperties(solidFill=marker_color, w=28575)  # ~2.25pt, tebal & terang
     )
 import io
 
@@ -112,7 +130,8 @@ def generate_excel():
     brighten_marker(chart_temp.series[0])
 
     chart_temp.y_axis.title = "Suhu (°C)"
-    chart_temp.x_axis.tickLblRot = 90
+    set_axis_title_horizontal(chart_temp.x_axis, "Masa")
+    rotate_axis_labels(chart_temp.x_axis, 90)
     chart_temp.legend.position = 'b'
     chart_temp.y_axis.scaling.min = 0
     chart_temp.y_axis.scaling.max = 50
@@ -161,7 +180,8 @@ def generate_excel():
     brighten_marker(chart_humid.series[0])
 
     chart_humid.y_axis.title = "Kelembapan (%)"
-    chart_humid.x_axis.tickLblRot = 90
+    set_axis_title_horizontal(chart_humid.x_axis, "Masa")
+    rotate_axis_labels(chart_humid.x_axis, 90)
     chart_humid.legend.position = 'b'
     chart_humid.y_axis.scaling.min = 0
     chart_humid.y_axis.scaling.max = 100
@@ -209,7 +229,8 @@ def generate_excel():
     brighten_marker(chart_gas.series[0])
 
     chart_gas.y_axis.title = "Gas (ADC)"
-    chart_gas.x_axis.tickLblRot = 90
+    set_axis_title_horizontal(chart_gas.x_axis, "Masa")
+    rotate_axis_labels(chart_gas.x_axis, 90)
     chart_gas.legend.position = 'b'
     chart_gas.y_axis.scaling.min = 0
     chart_gas.y_axis.scaling.max = 1000
