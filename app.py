@@ -1,5 +1,5 @@
 from flask import Flask, request, send_file
-from flask_cors import CORS  # ★ TAMBAH BARIS INI ★
+from flask_cors import CORS  # Aktifkan CORS
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from openpyxl.chart import LineChart, Reference
@@ -7,7 +7,7 @@ import io
 import json
 
 app = Flask(__name__)
-CORS(app)  # ★ TAMBAH BARIS INI (Aktifkan CORS untuk semua domain) ★
+CORS(app)  # Benarkan akses dari mana-mana domain (termasuk localhost)
 
 # Warna Excel standard (ARGB format)
 COLOR_NORMAL_BG = "FFC6EFCE"
@@ -18,7 +18,7 @@ COLOR_DANGER_BG = "FFFFC7CE"
 COLOR_DANGER_FONT = "FF9C0006"
 COLOR_HEADER_BG = "FF4472C4"
 
-# Helper untuk gaya sel
+# Helper untuk gaya sel (Border, warna background, align left)
 def style_cell(cell, is_header=False, status=None):
     thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
     cell.border = thin_border
@@ -28,7 +28,7 @@ def style_cell(cell, is_header=False, status=None):
         cell.font = Font(bold=True, color="FFFFFFFF", size=12)
         cell.alignment = Alignment(horizontal='center', vertical='center')
     else:
-        cell.alignment = Alignment(horizontal='left', vertical='center')
+        cell.alignment = Alignment(horizontal='left', vertical='center') # <-- Align Left
         if status:
             if status == "WARNING":
                 cell.fill = PatternFill(start_color=COLOR_WARNING_BG, end_color=COLOR_WARNING_BG, fill_type="solid")
@@ -56,6 +56,7 @@ def generate_excel():
     ws_temp_data.append([f"Tarikh: {date_str} | Masa: {time_str}"])
     ws_temp_data.append(["Masa", "Suhu (°C)", "Status"])
     
+    # Style Header
     for cell in ws_temp_data[3]:
         style_cell(cell, is_header=True)
 
@@ -64,7 +65,8 @@ def generate_excel():
         s = row.get('tempStatus', 'NORMAL')
         ws_temp_data.append([row.get('time'), f"{t:.1f}", s])
         
-    for i in range(4, len(ws_temp_data) + 1):
+    # ★ PERUBAHAN PENTING: guna .max_row dan bukannya len() ★
+    for i in range(4, ws_temp_data.max_row + 1):
         status = ws_temp_data.cell(row=i, column=3).value
         for col in range(1, 4):
             style_cell(ws_temp_data.cell(row=i, column=col), status=status)
@@ -97,7 +99,8 @@ def generate_excel():
         s = row.get('humidStatus', 'NORMAL')
         ws_humid_data.append([row.get('time'), f"{h:.1f}", s])
 
-    for i in range(4, len(ws_humid_data) + 1):
+    # ★ PERUBAHAN PENTING: guna .max_row dan bukannya len() ★
+    for i in range(4, ws_humid_data.max_row + 1):
         status = ws_humid_data.cell(row=i, column=3).value
         for col in range(1, 4):
             style_cell(ws_humid_data.cell(row=i, column=col), status=status)
@@ -113,7 +116,7 @@ def generate_excel():
     chart_humid.style = 12
     data_humid = Reference(ws_humid_data, min_col=2, min_row=3, max_row=len(rows)+2)
     chart_humid.add_data(data_humid, titles_from_data=True)
-    chart_humid.set_categories(cats_temp)
+    chart_humid.set_categories(cats_temp) # Guna paksi masa yang sama
     ws_humid_chart.add_chart(chart_humid, "A1")
 
     # --- 5. SHEET GAS DATA ---
@@ -129,7 +132,8 @@ def generate_excel():
         s = row.get('gasStatus', 'NORMAL')
         ws_gas_data.append([row.get('time'), round(g), s])
 
-    for i in range(4, len(ws_gas_data) + 1):
+    # ★ PERUBAHAN PENTING: guna .max_row dan bukannya len() ★
+    for i in range(4, ws_gas_data.max_row + 1):
         status = ws_gas_data.cell(row=i, column=3).value
         for col in range(1, 4):
             style_cell(ws_gas_data.cell(row=i, column=col), status=status)
@@ -148,6 +152,7 @@ def generate_excel():
     chart_gas.set_categories(cats_temp)
     ws_gas_chart.add_chart(chart_gas, "A1")
 
+    # --- SIMPAN KE MEMORI DAN HANTAR BALIK ---
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
