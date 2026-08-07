@@ -16,7 +16,7 @@ def set_axis_title_horizontal(axis, text):
     axis.title.tx.rich.bodyPr.vert = "horz"
 
 def rotate_axis_labels(axis, degrees=90):
-    # tickLblRot sahaja SENYAP GAGAL — mesti guna txPr/bodyPr rot
+    # tickLblRot sahaja SENYAP GAGAL (tak serialize ke XML) — mesti guna txPr/bodyPr rot
     # rot dalam unit 60000-per-darjah
     axis.txPr = RichText(
         bodyPr=RichTextProperties(rot=degrees * 60000, vert="horz"),
@@ -24,17 +24,18 @@ def rotate_axis_labels(axis, degrees=90):
     )
 
 def brighten_marker(series, marker_color="FF0000", line_color="4472C4"):
-    # Garisan siri data: kekal terang normal
+    # Garisan siri data: kekal terang normal (1.0x) — biru pekat standard
     series.graphicalProperties.line.solidFill = line_color
-    series.graphicalProperties.line.width = 19050
+    series.graphicalProperties.line.width = 19050  # ~1.5pt, garis normal
 
-    # Marker 'x' — ln (outline) jadi merah supaya nampak terang
+    # Marker 'x' ialah bentuk TERBUKA (dua garis bersilang) — TIADA kawasan isi.
+    # Warna yang sebenarnya nampak ialah stroke/'ln', BUKAN 'solidFill'.
+    # Sebab itu solidFill merah tak nampak sebelum ini — ln (outline) kena jadi merah.
     series.marker.symbol = 'x'
     series.marker.size = 13
     series.marker.graphicalProperties = GraphicalProperties(
-        ln=LineProperties(solidFill=marker_color, w=28575)
+        ln=LineProperties(solidFill=marker_color, w=28575)  # ~2.25pt, tebal & terang
     )
-
 import io
 
 app = Flask(__name__)
@@ -88,13 +89,12 @@ def generate_excel():
 
     wb = Workbook()
 
-    # ==========================================
-    # 1. SHEET: TEMPERATURE DATA & CHART
-    # ==========================================
     ws_temp_data = wb.active
     ws_temp_data.title = "Temperature Data"
     ws_temp_data.append(["LAPORAN DATA SUHU (°C)"])
     ws_temp_data.append([f"Tarikh: {date_str} | Masa: {time_str}"])
+    ws_temp_data.merge_cells("A1:B1")
+    ws_temp_data.merge_cells("A2:B2")
     ws_temp_data.append(["Masa", "Suhu (°C)", "Status"])
     for cell in ws_temp_data[3]:
         style_cell(cell, is_header=True)
@@ -119,24 +119,21 @@ def generate_excel():
     ws_temp_chart.merge_cells('A1:E1')
     ws_temp_chart.merge_cells('A2:E2')
 
-    data_values = Reference(ws_temp_data, min_col=2, min_row=4, max_row=row_count+3)
+    # min_row=3 supaya baris header ("Suhu (°C)") turut disertakan sebagai sumber nama siri
+    data_values = Reference(ws_temp_data, min_col=2, min_row=3, max_row=row_count+3)
     data_cats = Reference(ws_temp_data, min_col=1, min_row=4, max_row=row_count+3)
 
     chart_temp = LineChart()
     chart_temp.title = "Suhu (°C)"
     chart_temp.style = 13
-    chart_temp.add_data(data_values)
-    chart_temp.series[0].tx = SeriesLabel(v="Suhu (°C)")
+    chart_temp.add_data(data_values, titles_from_data=True)
     chart_temp.set_categories(data_cats)
 
     brighten_marker(chart_temp.series[0])
 
     chart_temp.y_axis.title = "Suhu (°C)"
-    # ★ DIUBAH: Buang set_axis_title_horizontal untuk membuang label "Masa"
-    # set_axis_title_horizontal(chart_temp.x_axis, "Masa")
+    set_axis_title_horizontal(chart_temp.x_axis, "Masa")
     rotate_axis_labels(chart_temp.x_axis, 90)
-    
-    # ★ DIUBAH: Buang legenda
     chart_temp.legend = None
     chart_temp.y_axis.scaling.min = 0
     chart_temp.y_axis.scaling.max = 50
@@ -146,12 +143,11 @@ def generate_excel():
     chart_temp.height = 15
     ws_temp_chart.add_chart(chart_temp, "A4")
 
-    # ==========================================
-    # 2. SHEET: HUMIDITY DATA & CHART
-    # ==========================================
     ws_humid_data = wb.create_sheet("Humidity Data")
     ws_humid_data.append(["LAPORAN DATA KELEMBAPAN (%)"])
     ws_humid_data.append([f"Tarikh: {date_str} | Masa: {time_str}"])
+    ws_humid_data.merge_cells("A1:B1")
+    ws_humid_data.merge_cells("A2:B2")
     ws_humid_data.append(["Masa", "Kelembapan (%)", "Status"])
     for cell in ws_humid_data[3]:
         style_cell(cell, is_header=True)
@@ -176,23 +172,19 @@ def generate_excel():
     ws_humid_chart.merge_cells('A1:E1')
     ws_humid_chart.merge_cells('A2:E2')
 
-    data_humid_values = Reference(ws_humid_data, min_col=2, min_row=4, max_row=row_count+3)
+    data_humid_values = Reference(ws_humid_data, min_col=2, min_row=3, max_row=row_count+3)
 
     chart_humid = LineChart()
     chart_humid.title = "Kelembapan (%)"
     chart_humid.style = 12
-    chart_humid.add_data(data_humid_values)
-    chart_humid.series[0].tx = SeriesLabel(v="Kelembapan (%)")
+    chart_humid.add_data(data_humid_values, titles_from_data=True)
     chart_humid.set_categories(data_cats)
 
     brighten_marker(chart_humid.series[0])
 
     chart_humid.y_axis.title = "Kelembapan (%)"
-    # ★ DIUBAH: Buang set_axis_title_horizontal untuk membuang label "Masa"
-    # set_axis_title_horizontal(chart_humid.x_axis, "Masa")
+    set_axis_title_horizontal(chart_humid.x_axis, "Masa")
     rotate_axis_labels(chart_humid.x_axis, 90)
-    
-    # ★ DIUBAH: Buang legenda
     chart_humid.legend = None
     chart_humid.y_axis.scaling.min = 0
     chart_humid.y_axis.scaling.max = 100
@@ -202,12 +194,11 @@ def generate_excel():
     chart_humid.height = 15
     ws_humid_chart.add_chart(chart_humid, "A4")
 
-    # ==========================================
-    # 3. SHEET: GAS DATA & CHART
-    # ==========================================
     ws_gas_data = wb.create_sheet("Gas Data")
     ws_gas_data.append(["LAPORAN DATA GAS (ADC)"])
     ws_gas_data.append([f"Tarikh: {date_str} | Masa: {time_str}"])
+    ws_gas_data.merge_cells("A1:B1")
+    ws_gas_data.merge_cells("A2:B2")
     ws_gas_data.append(["Masa", "Gas (ADC)", "Status"])
     for cell in ws_gas_data[3]:
         style_cell(cell, is_header=True)
@@ -231,23 +222,19 @@ def generate_excel():
     ws_gas_chart.merge_cells('A1:E1')
     ws_gas_chart.merge_cells('A2:E2')
 
-    data_gas_values = Reference(ws_gas_data, min_col=2, min_row=4, max_row=row_count+3)
+    data_gas_values = Reference(ws_gas_data, min_col=2, min_row=3, max_row=row_count+3)
 
     chart_gas = LineChart()
     chart_gas.title = "Gas (ADC)"
     chart_gas.style = 11
-    chart_gas.add_data(data_gas_values)
-    chart_gas.series[0].tx = SeriesLabel(v="Gas (ADC)")
+    chart_gas.add_data(data_gas_values, titles_from_data=True)
     chart_gas.set_categories(data_cats)
 
     brighten_marker(chart_gas.series[0])
 
     chart_gas.y_axis.title = "Gas (ADC)"
-    # ★ DIUBAH: Buang set_axis_title_horizontal untuk membuang label "Masa"
-    # set_axis_title_horizontal(chart_gas.x_axis, "Masa")
+    set_axis_title_horizontal(chart_gas.x_axis, "Masa")
     rotate_axis_labels(chart_gas.x_axis, 90)
-    
-    # ★ DIUBAH: Buang legenda
     chart_gas.legend = None
     chart_gas.y_axis.scaling.min = 0
     chart_gas.y_axis.scaling.max = 1000
