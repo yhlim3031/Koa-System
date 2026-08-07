@@ -107,7 +107,7 @@ def generate_excel():
         for col in range(1, 4):
             style_cell(ws_temp_data.cell(row=i, column=col), status=status)
         ws_temp_data.cell(row=i, column=2).number_format = '0.0'
-    ws_temp_data.column_dimensions['A'].width = 15
+    ws_temp_data.column_dimensions['A'].width = 30
     ws_temp_data.column_dimensions['B'].width = 15
     ws_temp_data.column_dimensions['C'].width = 20
 
@@ -160,7 +160,7 @@ def generate_excel():
         for col in range(1, 4):
             style_cell(ws_humid_data.cell(row=i, column=col), status=status)
         ws_humid_data.cell(row=i, column=2).number_format = '0.0'
-    ws_humid_data.column_dimensions['A'].width = 15
+    ws_humid_data.column_dimensions['A'].width = 30
     ws_humid_data.column_dimensions['B'].width = 22
     ws_humid_data.column_dimensions['C'].width = 20
 
@@ -210,7 +210,7 @@ def generate_excel():
         status = ws_gas_data.cell(row=i, column=3).value
         for col in range(1, 4):
             style_cell(ws_gas_data.cell(row=i, column=col), status=status)
-    ws_gas_data.column_dimensions['A'].width = 15
+    ws_gas_data.column_dimensions['A'].width = 30
     ws_gas_data.column_dimensions['B'].width = 14
     ws_gas_data.column_dimensions['C'].width = 20
 
@@ -248,7 +248,7 @@ def generate_excel():
     wb.save(output)
     output.seek(0)
 
-    return send_file(output, download_name=f"Laporan_Excel_{date_str.replace('/', '-')}.xlsx", as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    return send_file(output, download_name="LAPORAN SISTEM MONITORING PENGGERA KEBAKARAN.xlsx", as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
