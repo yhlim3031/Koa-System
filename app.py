@@ -4,6 +4,20 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Font
 from openpyxl.chart import LineChart, Reference
 from openpyxl.chart.series import SeriesLabel
+from openpyxl.chart.shapes import GraphicalProperties
+from openpyxl.drawing.line import LineProperties
+
+def brighten_marker(series, marker_color="FFFF0000", line_color="FFB0C4DE"):
+    # Garisan: dinipiskan & warna dilembutkan supaya tidak "menelan" titik X
+    series.graphicalProperties.line.solidFill = line_color
+    series.graphicalProperties.line.width = 15000  # ~1.2pt, lebih nipis dari default
+    # Marker X: lebih besar, warna terang, ada outline putih supaya kelihatan "timbul" depan garis
+    series.marker.symbol = 'x'
+    series.marker.size = 9
+    series.marker.graphicalProperties = GraphicalProperties(
+        solidFill=marker_color,
+        ln=LineProperties(solidFill="FFFFFFFF", w=9525)
+    )
 import io
 
 app = Flask(__name__)
@@ -67,11 +81,12 @@ def generate_excel():
     for row in rows:
         t = row.get('temperature', 0)
         s = row.get('tempStatus', 'NORMAL')
-        ws_temp_data.append([row.get('time'), f"{t:.1f}", s])
+        ws_temp_data.append([row.get('time'), round(t, 1), s])
     for i in range(4, ws_temp_data.max_row + 1):
         status = ws_temp_data.cell(row=i, column=3).value
         for col in range(1, 4):
             style_cell(ws_temp_data.cell(row=i, column=col), status=status)
+        ws_temp_data.cell(row=i, column=2).number_format = '0.0'
     ws_temp_data.column_dimensions['A'].width = 15
     ws_temp_data.column_dimensions['B'].width = 15
     ws_temp_data.column_dimensions['C'].width = 20
@@ -94,9 +109,7 @@ def generate_excel():
     chart_temp.series[0].tx = SeriesLabel(v="Suhu (°C)")
     chart_temp.set_categories(data_cats)
 
-    chart_temp.series[0].marker.symbol = 'x'
-    chart_temp.series[0].marker.size = 6
-    chart_temp.series[0].marker.graphicalProperties.solidFill = "FF0000"
+    brighten_marker(chart_temp.series[0])
 
     chart_temp.y_axis.title = "Suhu (°C)"
     chart_temp.x_axis.tickLblRot = 90
@@ -118,11 +131,12 @@ def generate_excel():
     for row in rows:
         h = row.get('humidity', 0)
         s = row.get('humidStatus', 'NORMAL')
-        ws_humid_data.append([row.get('time'), f"{h:.1f}", s])
+        ws_humid_data.append([row.get('time'), round(h, 1), s])
     for i in range(4, ws_humid_data.max_row + 1):
         status = ws_humid_data.cell(row=i, column=3).value
         for col in range(1, 4):
             style_cell(ws_humid_data.cell(row=i, column=col), status=status)
+        ws_humid_data.cell(row=i, column=2).number_format = '0.0'
     ws_humid_data.column_dimensions['A'].width = 15
     ws_humid_data.column_dimensions['B'].width = 22
     ws_humid_data.column_dimensions['C'].width = 20
@@ -144,9 +158,7 @@ def generate_excel():
     chart_humid.series[0].tx = SeriesLabel(v="Kelembapan (%)")
     chart_humid.set_categories(data_cats)
 
-    chart_humid.series[0].marker.symbol = 'x'
-    chart_humid.series[0].marker.size = 6
-    chart_humid.series[0].marker.graphicalProperties.solidFill = "FF0000"
+    brighten_marker(chart_humid.series[0])
 
     chart_humid.y_axis.title = "Kelembapan (%)"
     chart_humid.x_axis.tickLblRot = 90
@@ -194,9 +206,7 @@ def generate_excel():
     chart_gas.series[0].tx = SeriesLabel(v="Gas (ADC)")
     chart_gas.set_categories(data_cats)
 
-    chart_gas.series[0].marker.symbol = 'x'
-    chart_gas.series[0].marker.size = 6
-    chart_gas.series[0].marker.graphicalProperties.solidFill = "FF0000"
+    brighten_marker(chart_gas.series[0])
 
     chart_gas.y_axis.title = "Gas (ADC)"
     chart_gas.x_axis.tickLblRot = 90
