@@ -31,10 +31,10 @@ def brighten_marker(series, marker_color="FF0000", line_color="4472C4"):
     # Marker 'x' ialah bentuk TERBUKA (dua garis bersilang) — TIADA kawasan isi.
     # Warna yang sebenarnya nampak ialah stroke/'ln', BUKAN 'solidFill'.
     # Sebab itu solidFill merah tak nampak sebelum ini — ln (outline) kena jadi merah.
-    series.marker.symbol = 'circle'
-    series.marker.size = 2
+    series.marker.symbol = 'x'
+    series.marker.size = 13
     series.marker.graphicalProperties = GraphicalProperties(
-        ln=LineProperties(solidFill=marker_color, w=6350)  # ~2.25pt, tebal & terang
+        ln=LineProperties(solidFill=marker_color, w=28575)  # ~2.25pt, tebal & terang
     )
 import io
 
@@ -89,6 +89,7 @@ def generate_excel():
 
     wb = Workbook()
 
+    # ================= TEMPERATURE =================
     ws_temp_data = wb.active
     ws_temp_data.title = "Temperature Data"
     ws_temp_data.append(["LAPORAN DATA SUHU (°C)"])
@@ -110,6 +111,11 @@ def generate_excel():
     ws_temp_data.column_dimensions['A'].width = 30
     ws_temp_data.column_dimensions['B'].width = 15
     ws_temp_data.column_dimensions['C'].width = 20
+
+    # NEW: checkbox filter dropdown on header row (Masa / Suhu / Status)
+    # Header MUST be row 3 (matches your printed header) so Excel recognises
+    # it as the filter row and puts the dropdown arrows there.
+    ws_temp_data.auto_filter.ref = f"A3:C{ws_temp_data.max_row}"
 
     ws_temp_chart = wb.create_sheet("Temperature Chart")
     for col in range(1, 6):
@@ -135,6 +141,8 @@ def generate_excel():
     set_axis_title_horizontal(chart_temp.x_axis, "Masa")
     rotate_axis_labels(chart_temp.x_axis, 90)
     chart_temp.legend = None
+    # NEW: keep plotting ALL rows even if some are hidden by the Status filter
+    chart_temp.plotVisOnly = False
     chart_temp.y_axis.scaling.min = 0
     chart_temp.y_axis.scaling.max = 50
     chart_temp.x_axis.auto = False
@@ -143,6 +151,7 @@ def generate_excel():
     chart_temp.height = 13.5
     ws_temp_chart.add_chart(chart_temp, "A4")
 
+    # ================= HUMIDITY =================
     ws_humid_data = wb.create_sheet("Humidity Data")
     ws_humid_data.append(["LAPORAN DATA KELEMBAPAN (%)"])
     ws_humid_data.append([f"Tarikh: {date_str} | Masa: {time_str}"])
@@ -163,6 +172,9 @@ def generate_excel():
     ws_humid_data.column_dimensions['A'].width = 30
     ws_humid_data.column_dimensions['B'].width = 22
     ws_humid_data.column_dimensions['C'].width = 20
+
+    # NEW: checkbox filter dropdown
+    ws_humid_data.auto_filter.ref = f"A3:C{ws_humid_data.max_row}"
 
     ws_humid_chart = wb.create_sheet("Humidity Chart")
     for col in range(1, 6):
@@ -186,6 +198,8 @@ def generate_excel():
     set_axis_title_horizontal(chart_humid.x_axis, "Masa")
     rotate_axis_labels(chart_humid.x_axis, 90)
     chart_humid.legend = None
+    # NEW: keep plotting ALL rows even if some are hidden by the Status filter
+    chart_humid.plotVisOnly = False
     chart_humid.y_axis.scaling.min = 0
     chart_humid.y_axis.scaling.max = 100
     chart_humid.x_axis.auto = False
@@ -194,6 +208,7 @@ def generate_excel():
     chart_humid.height = 13.5
     ws_humid_chart.add_chart(chart_humid, "A4")
 
+    # ================= GAS =================
     ws_gas_data = wb.create_sheet("Gas Data")
     ws_gas_data.append(["LAPORAN DATA GAS (ADC)"])
     ws_gas_data.append([f"Tarikh: {date_str} | Masa: {time_str}"])
@@ -213,6 +228,9 @@ def generate_excel():
     ws_gas_data.column_dimensions['A'].width = 30
     ws_gas_data.column_dimensions['B'].width = 14
     ws_gas_data.column_dimensions['C'].width = 20
+
+    # NEW: checkbox filter dropdown
+    ws_gas_data.auto_filter.ref = f"A3:C{ws_gas_data.max_row}"
 
     ws_gas_chart = wb.create_sheet("Gas Chart")
     for col in range(1, 6):
@@ -236,6 +254,8 @@ def generate_excel():
     set_axis_title_horizontal(chart_gas.x_axis, "Masa")
     rotate_axis_labels(chart_gas.x_axis, 90)
     chart_gas.legend = None
+    # NEW: keep plotting ALL rows even if some are hidden by the Status filter
+    chart_gas.plotVisOnly = False
     chart_gas.y_axis.scaling.min = 0
     chart_gas.y_axis.scaling.max = 1000
     chart_gas.x_axis.auto = False
