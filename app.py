@@ -76,6 +76,22 @@ def style_chart_header(ws, row, text):
     cell.font = Font(bold=True, sz=14)
     cell.alignment = Alignment(horizontal='center', vertical='center')
 
+def write_raw_mirror(wb, raw_name, header_label, rows, value_key, decimals=True):
+    """
+    Sheet HIDDEN yang tak pernah disentuh user - checkbox filter pada sheet
+    utama TIDAK PERNAH boleh sampai ke sini. Chart baca dari sheet ni,
+    bukan dari sheet yang ada filter. Ini fix yang tahan platform
+    (Excel / LibreOffice / Google Sheets) sebab kita tak bergantung pada
+    'plotVisOnly', yang sokongannya tak konsisten merentasi software.
+    """
+    ws_raw = wb.create_sheet(raw_name)
+    ws_raw.sheet_state = 'hidden'
+    ws_raw.append(["Masa", header_label])
+    for row in rows:
+        v = row.get(value_key, 0)
+        ws_raw.append([row.get('time'), round(v, 1) if decimals else round(v)])
+    return ws_raw
+
 @app.route('/generate-excel', methods=['POST'])
 def generate_excel():
     data = request.json
@@ -112,10 +128,11 @@ def generate_excel():
     ws_temp_data.column_dimensions['B'].width = 15
     ws_temp_data.column_dimensions['C'].width = 20
 
-    # NEW: checkbox filter dropdown on header row (Masa / Suhu / Status)
-    # Header MUST be row 3 (matches your printed header) so Excel recognises
-    # it as the filter row and puts the dropdown arrows there.
+    # Checkbox filter dropdown (Masa / Suhu / Status) - bebas user tapis macam mana pun
     ws_temp_data.auto_filter.ref = f"A3:C{ws_temp_data.max_row}"
+
+    # Mirror HIDDEN - sumber data untuk chart, tak pernah kena filter
+    ws_temp_raw = write_raw_mirror(wb, "_TempRaw", "Suhu (°C)", rows, 'temperature', decimals=True)
 
     ws_temp_chart = wb.create_sheet("Temperature Chart")
     for col in range(1, 6):
@@ -125,9 +142,9 @@ def generate_excel():
     ws_temp_chart.merge_cells('A1:E1')
     ws_temp_chart.merge_cells('A2:E2')
 
-    # min_row=3 supaya baris header ("Suhu (°C)") turut disertakan sebagai sumber nama siri
-    data_values = Reference(ws_temp_data, min_col=2, min_row=3, max_row=row_count+3)
-    data_cats = Reference(ws_temp_data, min_col=1, min_row=4, max_row=row_count+3)
+    # Baca dari ws_temp_raw (hidden): row 1 = header, row 2..row_count+1 = data
+    data_values = Reference(ws_temp_raw, min_col=2, min_row=1, max_row=row_count + 1)
+    data_cats = Reference(ws_temp_raw, min_col=1, min_row=2, max_row=row_count + 1)
 
     chart_temp = LineChart()
     chart_temp.title = "Suhu (°C)"
@@ -141,8 +158,6 @@ def generate_excel():
     set_axis_title_horizontal(chart_temp.x_axis, "Masa")
     rotate_axis_labels(chart_temp.x_axis, 90)
     chart_temp.legend = None
-    # NEW: keep plotting ALL rows even if some are hidden by the Status filter
-    chart_temp.plotVisOnly = False
     chart_temp.y_axis.scaling.min = 0
     chart_temp.y_axis.scaling.max = 50
     chart_temp.x_axis.auto = False
@@ -173,8 +188,9 @@ def generate_excel():
     ws_humid_data.column_dimensions['B'].width = 22
     ws_humid_data.column_dimensions['C'].width = 20
 
-    # NEW: checkbox filter dropdown
     ws_humid_data.auto_filter.ref = f"A3:C{ws_humid_data.max_row}"
+
+    ws_humid_raw = write_raw_mirror(wb, "_HumidRaw", "Kelembapan (%)", rows, 'humidity', decimals=True)
 
     ws_humid_chart = wb.create_sheet("Humidity Chart")
     for col in range(1, 6):
@@ -184,13 +200,14 @@ def generate_excel():
     ws_humid_chart.merge_cells('A1:E1')
     ws_humid_chart.merge_cells('A2:E2')
 
-    data_humid_values = Reference(ws_humid_data, min_col=2, min_row=3, max_row=row_count+3)
+    data_humid_values = Reference(ws_humid_raw, min_col=2, min_row=1, max_row=row_count + 1)
+    data_humid_cats = Reference(ws_humid_raw, min_col=1, min_row=2, max_row=row_count + 1)
 
     chart_humid = LineChart()
     chart_humid.title = "Kelembapan (%)"
     chart_humid.style = 12
     chart_humid.add_data(data_humid_values, titles_from_data=True)
-    chart_humid.set_categories(data_cats)
+    chart_humid.set_categories(data_humid_cats)
 
     brighten_marker(chart_humid.series[0])
 
@@ -198,8 +215,6 @@ def generate_excel():
     set_axis_title_horizontal(chart_humid.x_axis, "Masa")
     rotate_axis_labels(chart_humid.x_axis, 90)
     chart_humid.legend = None
-    # NEW: keep plotting ALL rows even if some are hidden by the Status filter
-    chart_humid.plotVisOnly = False
     chart_humid.y_axis.scaling.min = 0
     chart_humid.y_axis.scaling.max = 100
     chart_humid.x_axis.auto = False
@@ -229,8 +244,9 @@ def generate_excel():
     ws_gas_data.column_dimensions['B'].width = 14
     ws_gas_data.column_dimensions['C'].width = 20
 
-    # NEW: checkbox filter dropdown
     ws_gas_data.auto_filter.ref = f"A3:C{ws_gas_data.max_row}"
+
+    ws_gas_raw = write_raw_mirror(wb, "_GasRaw", "Gas (ADC)", rows, 'gas', decimals=False)
 
     ws_gas_chart = wb.create_sheet("Gas Chart")
     for col in range(1, 6):
@@ -240,13 +256,14 @@ def generate_excel():
     ws_gas_chart.merge_cells('A1:E1')
     ws_gas_chart.merge_cells('A2:E2')
 
-    data_gas_values = Reference(ws_gas_data, min_col=2, min_row=3, max_row=row_count+3)
+    data_gas_values = Reference(ws_gas_raw, min_col=2, min_row=1, max_row=row_count + 1)
+    data_gas_cats = Reference(ws_gas_raw, min_col=1, min_row=2, max_row=row_count + 1)
 
     chart_gas = LineChart()
     chart_gas.title = "Gas (ADC)"
     chart_gas.style = 11
     chart_gas.add_data(data_gas_values, titles_from_data=True)
-    chart_gas.set_categories(data_cats)
+    chart_gas.set_categories(data_gas_cats)
 
     brighten_marker(chart_gas.series[0])
 
@@ -254,8 +271,6 @@ def generate_excel():
     set_axis_title_horizontal(chart_gas.x_axis, "Masa")
     rotate_axis_labels(chart_gas.x_axis, 90)
     chart_gas.legend = None
-    # NEW: keep plotting ALL rows even if some are hidden by the Status filter
-    chart_gas.plotVisOnly = False
     chart_gas.y_axis.scaling.min = 0
     chart_gas.y_axis.scaling.max = 1000
     chart_gas.x_axis.auto = False
